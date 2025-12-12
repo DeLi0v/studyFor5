@@ -1,15 +1,19 @@
 package models
 
-import "time"
+import (
+	"gorm.io/gorm"
+)
 
 type Student struct {
-    ID        uint      `gorm:"primaryKey" json:"id"`
-    FirstName string    `gorm:"not null" json:"first_name"`
-    LastName  string    `gorm:"not null" json:"last_name"`
-    MiddleName string   `json:"middle_name"`
-    Phone     string    `json:"phone"`
-    Email     string    `json:"email"`
-    GroupID   uint      `gorm:"not null" json:"group_id"`
-    CreatedAt time.Time `json:"created_at"`
-    UpdatedAt time.Time `json:"updated_at"`
+	gorm.Model
+	FirstName   string `gorm:"not null"`
+	LastName    string `gorm:"not null"`
+	MiddleName  string
+	Phone       string
+	Email       string
+	GroupID     uint         `gorm:"not null"` // FK на Group
+	Group       Group        `gorm:"foreignKey:GroupID"`
+	Grades      []Grade      `gorm:"foreignKey:StudentID"`
+	EventGrades []EventGrade `gorm:"foreignKey:StudentID"`
+	Parents     []Parent     `gorm:"many2many:student_relations"`
 }
