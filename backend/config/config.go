@@ -7,13 +7,14 @@ import (
 )
 
 type Config struct {
-	Host     string `json:"localhost"`
-	Port     int    `json:"5432"`
-	User     string `json:"postgres"`
-	Password string `json:"123"`
-	DbName   string `json:"school"`
-	SslMode  string `json:"disable"`
-	TimeZone string `json:"Europe/Moscow"`
+	Host       string `json:"host"`
+	Port       int    `json:"port"`
+	User       string `json:"user"`
+	Password   string `json:"password"`
+	DbName     string `json:"dbname"`
+	SslMode    string `json:"sslmode"`
+	TimeZone   string `json:"timezone"`
+	ServerPort string `json:"server_port"` // для HTTP сервера
 }
 
 func LoadConfig(path string) Config {

@@ -1,9 +1,9 @@
 package db
 
 import (
+	"backend/config"
 	"fmt"
 	"log"
-	"studyFor5/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
