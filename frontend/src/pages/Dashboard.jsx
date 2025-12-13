@@ -28,10 +28,10 @@ export default function Dashboard() {
         ]);
 
         setStats({
-          students: students.data.length,
-          teachers: teachers.data.length,
-          groups: groups.data.length,
-          events: events.data.length,
+          students: students.length,
+          teachers: teachers.length,
+          groups: groups.length,
+          events: events.length,
         });
       } catch (err) {
         console.error("Ошибка при загрузке статистики:", err);

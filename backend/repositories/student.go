@@ -35,7 +35,34 @@ func (r *StudentRepository) Create(student *models.Student) error {
 
 // Обновить участника события
 func (r *StudentRepository) Update(student *models.Student) error {
-	return r.db.Save(student).Error
+	updates := map[string]interface{}{}
+
+	if student.FirstName != "" {
+		updates["first_name"] = student.FirstName
+	}
+	if student.LastName != "" {
+		updates["last_name"] = student.LastName
+	}
+	if student.MiddleName != "" {
+		updates["middle_name"] = student.MiddleName
+	}
+	if student.GroupID != 0 {
+		updates["group_id"] = student.GroupID
+	}
+	if student.Phone != 0 {
+		updates["phone"] = student.Phone
+	}
+	if student.Email != "" {
+		updates["email"] = student.Email
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.Student{}).
+		Where("id = ?", student.ID).
+		Updates(updates).Error
 }
 
 // Удалить участника события

@@ -34,8 +34,8 @@ func (s *StudentRelationService) Create(rel *models.StudentRelation) error {
 	return s.repo.Create(rel)
 }
 
-func (s *StudentRelationService) Update(rel *models.StudentRelation) error {
-	return s.repo.Update(rel)
+func (s *StudentRelationService) Update(oldRel *models.StudentRelation, newRel *models.StudentRelation) error {
+	return s.repo.Update(oldRel, newRel)
 }
 
 func (s *StudentRelationService) Delete(studentID, parentID uint) error {

@@ -35,7 +35,22 @@ func (r *RoomRepository) Create(room *models.Room) error {
 
 // Обновить участника события
 func (r *RoomRepository) Update(room *models.Room) error {
-	return r.db.Save(room).Error
+	updates := map[string]interface{}{}
+
+	if room.Number != "" {
+		updates["number"] = room.Number
+	}
+	if room.Floor != 0 {
+		updates["floor"] = room.Floor
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.Room{}).
+		Where("id = ?", room.ID).
+		Updates(updates).Error
 }
 
 // Удалить участника события

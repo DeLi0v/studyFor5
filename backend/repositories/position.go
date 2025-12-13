@@ -35,7 +35,19 @@ func (r *PositionRepository) Create(position *models.Position) error {
 
 // Обновить участника события
 func (r *PositionRepository) Update(position *models.Position) error {
-	return r.db.Save(position).Error
+	updates := map[string]interface{}{}
+
+	if position.Name != "" {
+		updates["name"] = position.Name
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.Position{}).
+		Where("id = ?", position.ID).
+		Updates(updates).Error
 }
 
 // Удалить участника события

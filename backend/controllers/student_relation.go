@@ -83,24 +83,32 @@ func (h *StudentRelationHandler) Create(c *gin.Context) {
 }
 
 // PUT /student_relations/:student_id/:parent_id
+// PUT /student_relations/:student_id/:parent_id
 func (h *StudentRelationHandler) Update(c *gin.Context) {
 	studentID, _ := strconv.ParseUint(c.Param("student_id"), 10, 64)
 	parentID, _ := strconv.ParseUint(c.Param("parent_id"), 10, 64)
 
-	var rel models.StudentRelation
-	if err := c.ShouldBindJSON(&rel); err != nil {
+	var newRel models.StudentRelation
+	if err := c.ShouldBindJSON(&newRel); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	rel.StudentID = uint(studentID)
-	rel.ParentID = uint(parentID)
+	oldRel := &models.StudentRelation{
+		StudentID: uint(studentID),
+		ParentID:  uint(parentID),
+	}
 
-	if err := h.service.Update(&rel); err != nil {
+	// Присваиваем новые значения
+	newRel.StudentID = uint(studentID) // если нужно менять StudentID, можно убрать эту строку
+	newRel.ParentID = newRel.ParentID  // ParentID из тела запроса
+
+	if err := h.service.Update(oldRel, &newRel); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, rel)
+
+	c.JSON(http.StatusOK, newRel)
 }
 
 // DELETE /student_relations/:student_id/:parent_id

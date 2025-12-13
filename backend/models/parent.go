@@ -5,7 +5,7 @@ type Parent struct {
 	FirstName  string
 	LastName   string
 	MiddleName string
-	Phone      string
+	Phone      uint
 	Email      string
 	Students   []Student `gorm:"many2many:student_relations"`
 }

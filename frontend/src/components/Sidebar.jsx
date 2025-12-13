@@ -5,24 +5,57 @@ export default function Sidebar() {
   return (
     <Box w="200px" minH="100vh" bg="gray.100" p={4}>
       <VStack align="start" spacing={3}>
-        <NavLink to="/">
-          <Link>Главная</Link>
-        </NavLink>
-        <NavLink to="/students">
-          <Link>Студенты</Link>
-        </NavLink>
-        <NavLink to="/teachers">
-          <Link>Учителя</Link>
-        </NavLink>
-        <NavLink to="/groups">
-          <Link>Группы</Link>
-        </NavLink>
-        <NavLink to="/events">
-          <Link>События</Link>
-        </NavLink>
-        <NavLink to="/event-participants">
-          <Link>Участники событий</Link>
-        </NavLink>
+        <Link as={NavLink} to="/">
+          Главная
+        </Link>
+
+        <Link as={NavLink} to="/students">
+          Ученики
+        </Link>
+        <Link as={NavLink} to="/groups">
+          Группы
+        </Link>
+        <Link as={NavLink} to="/teachers">
+          Учителя
+        </Link>
+
+        <Link as={NavLink} to="/lessons">
+          Уроки
+        </Link>
+        <Link as={NavLink} to="/events">
+          События
+        </Link>
+        <Link as={NavLink} to="/event-participants">
+          Участники событий
+        </Link>
+
+        <Link as={NavLink} to="/grades">
+          Оценки
+        </Link>
+        <Link as={NavLink} to="/event-grades">
+          Оценки за события
+        </Link>
+
+        <Link as={NavLink} to="/parents">
+          Родители
+        </Link>
+
+        <Link as={NavLink} to="/subjects">
+          Предметы
+        </Link>
+        <Link as={NavLink} to="/rooms">
+          Кабинеты
+        </Link>
+        <Link as={NavLink} to="/positions">
+          Должности
+        </Link>
+        <Link as={NavLink} to="/specialties">
+          Специальности
+        </Link>
+
+        <Link as={NavLink} to="/student-relations">
+          Связи студенты-родители
+        </Link>
       </VStack>
     </Box>
   );

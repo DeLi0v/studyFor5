@@ -35,7 +35,19 @@ func (r *SpecialtyRepository) Create(specialty *models.Specialty) error {
 
 // Обновить участника события
 func (r *SpecialtyRepository) Update(specialty *models.Specialty) error {
-	return r.db.Save(specialty).Error
+	updates := map[string]interface{}{}
+
+	if specialty.Name != "" {
+		updates["name"] = specialty.Name
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.Specialty{}).
+		Where("id = ?", specialty.ID).
+		Updates(updates).Error
 }
 
 // Удалить участника события

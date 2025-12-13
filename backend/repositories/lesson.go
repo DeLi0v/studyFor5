@@ -35,7 +35,41 @@ func (r *LessonRepository) Create(lesson *models.Lesson) error {
 
 // Обновить участника события
 func (r *LessonRepository) Update(lesson *models.Lesson) error {
-	return r.db.Save(lesson).Error
+	updates := map[string]interface{}{}
+
+	if lesson.GroupID != 0 {
+		updates["group_id"] = lesson.GroupID
+	}
+	if lesson.SubjectID != 0 {
+		updates["subject_id"] = lesson.SubjectID
+	}
+	if lesson.TeacherID != 0 {
+		updates["teacher_id"] = lesson.TeacherID
+	}
+	if lesson.RoomID != 0 {
+		updates["room_id"] = lesson.RoomID
+	}
+	if lesson.Weekday != 0 {
+		updates["weekday"] = lesson.Weekday
+	}
+	if lesson.TimeStart.IsZero() {
+		updates["time_start"] = lesson.TimeStart
+	}
+	if lesson.TimeEnd.IsZero() {
+		updates["time_end"] = lesson.TimeEnd
+	}
+	if lesson.EndDate.IsZero() {
+		updates["end_date"] = lesson.EndDate
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.Lesson{}).
+		Where("id = ?", lesson.ID).
+		Updates(updates).Error
+
 }
 
 // Удалить участника события

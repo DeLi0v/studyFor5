@@ -17,14 +17,14 @@ func NewGroupRepository(db *gorm.DB) *GroupRepository {
 // Получить всех участников события
 func (r *GroupRepository) GetAll() ([]models.Group, error) {
 	var groups []models.Group
-	result := r.db.Preload("ClassTeacher").Preload("Lessons").Find(&groups)
+	result := r.db.Preload("ClassTeacher").Find(&groups)
 	return groups, result.Error
 }
 
 // Получить участника события по ID
 func (r *GroupRepository) GetByID(id uint) (*models.Group, error) {
 	var group models.Group
-	result := r.db.Preload("ClassTeacher").Preload("Lessons").First(&group, id)
+	result := r.db.Preload("ClassTeacher").First(&group, id)
 	return &group, result.Error
 }
 
@@ -35,7 +35,29 @@ func (r *GroupRepository) Create(group *models.Group) error {
 
 // Обновить участника события
 func (r *GroupRepository) Update(group *models.Group) error {
-	return r.db.Save(group).Error
+	updates := map[string]interface{}{}
+
+	if group.Number != "" {
+		updates["number"] = group.Number
+	}
+	if group.Parallel != 0 {
+		updates["parallel"] = group.Parallel
+	}
+	if group.AdmissionDate.IsZero() {
+		updates["admission_date"] = group.AdmissionDate
+	}
+	if group.ClassTeacherID != 0 {
+		updates["class_teacher_id"] = group.ClassTeacherID
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.Group{}).
+		Where("id = ?", group.ID).
+		Updates(updates).Error
+
 }
 
 // Удалить участника события

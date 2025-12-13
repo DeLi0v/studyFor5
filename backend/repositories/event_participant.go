@@ -35,7 +35,25 @@ func (r *EventParticipantRepository) Create(participant *models.EventParticipant
 
 // Обновить участника события
 func (r *EventParticipantRepository) Update(participant *models.EventParticipant) error {
-	return r.db.Save(participant).Error
+	updates := map[string]interface{}{}
+
+	if participant.EventID != 0 {
+		updates["participant_id"] = participant.EventID
+	}
+	if participant.ParticipantType != "" {
+		updates["participant_type"] = participant.ParticipantType
+	}
+	if participant.ParticipantID != 0 {
+		updates["participant_id"] = participant.ParticipantID
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.EventParticipant{}).
+		Where("id = ?", participant.ID).
+		Updates(updates).Error
 }
 
 // Удалить участника события

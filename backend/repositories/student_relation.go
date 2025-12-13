@@ -49,8 +49,21 @@ func (r *StudentRelationRepository) Create(rel *models.StudentRelation) error {
 }
 
 // Update — обновить существующую связь
-func (r *StudentRelationRepository) Update(rel *models.StudentRelation) error {
-	return r.db.Save(rel).Error
+func (r *StudentRelationRepository) Update(oldRel *models.StudentRelation, newRel *models.StudentRelation) error {
+	// Начинаем транзакцию, чтобы операции были атомарными
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Удаляем старую запись
+		if err := tx.Delete(&models.StudentRelation{}, "student_id = ? AND parent_id = ?", oldRel.StudentID, oldRel.ParentID).Error; err != nil {
+			return err
+		}
+
+		// Создаем новую запись
+		if err := tx.Create(newRel).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 // Delete — удалить связь по составному ключу

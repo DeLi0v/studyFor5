@@ -31,7 +31,38 @@ func (r *EventRepository) Create(event *models.Event) error {
 }
 
 func (r *EventRepository) Update(event *models.Event) error {
-	return r.db.Save(event).Error
+
+	updates := map[string]interface{}{}
+
+	if event.Type != "" {
+		updates["type"] = event.Type
+	}
+	if event.Name != "" {
+		updates["name"] = event.Name
+	}
+	if event.Description != "" {
+		updates["description"] = event.Description
+	}
+	if event.RoomID != 0 {
+		updates["room_id"] = event.RoomID
+	}
+	if event.EventDate.IsZero() {
+		updates["event_date"] = event.EventDate
+	}
+	if event.TimeStart.IsZero() {
+		updates["time_start"] = event.TimeStart
+	}
+	if event.TimeEnd.IsZero() {
+		updates["time_end"] = event.TimeEnd
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.Event{}).
+		Where("id = ?", event.ID).
+		Updates(updates).Error
 }
 
 func (r *EventRepository) Delete(id uint) error {

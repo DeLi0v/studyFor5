@@ -35,7 +35,19 @@ func (r *SubjectRepository) Create(subject *models.Subject) error {
 
 // Обновить участника события
 func (r *SubjectRepository) Update(subject *models.Subject) error {
-	return r.db.Save(subject).Error
+	updates := map[string]interface{}{}
+
+	if subject.Name != "" {
+		updates["name"] = subject.Name
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.Subject{}).
+		Where("id = ?", subject.ID).
+		Updates(updates).Error
 }
 
 // Удалить участника события

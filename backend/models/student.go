@@ -5,7 +5,7 @@ type Student struct {
 	FirstName  string `gorm:"not null"`
 	LastName   string `gorm:"not null"`
 	MiddleName string
-	Phone      string
+	Phone      uint
 	Email      string
 	GroupID    uint     `gorm:"not null"` // FK на Group
 	Group      Group    `gorm:"foreignKey:GroupID"`

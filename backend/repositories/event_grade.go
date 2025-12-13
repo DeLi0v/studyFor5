@@ -34,8 +34,32 @@ func (r *EventGradeRepository) Create(eventGrade *models.EventGrade) error {
 }
 
 // Обновить участника события
-func (r *EventGradeRepository) Update(eventGrade *models.EventGrade) error {
-	return r.db.Save(eventGrade).Error
+func (r *EventGradeRepository) Update(eg *models.EventGrade) error {
+	updates := map[string]interface{}{}
+
+	if eg.StudentID != 0 {
+		updates["student_id"] = eg.StudentID
+	}
+	if eg.EventID != 0 {
+		updates["event_id"] = eg.EventID
+	}
+	if eg.EventID != 0 {
+		updates["date_given"] = eg.DateGiven
+	}
+	if eg.EventID != 0 {
+		updates["score"] = eg.Score
+	}
+	if eg.EventID != 0 {
+		updates["graded_by"] = eg.GradedBy
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return r.db.Model(&models.EventGrade{}).
+		Where("id = ?", eg.ID).
+		Updates(updates).Error
 }
 
 // Удалить участника события
