@@ -13,7 +13,7 @@ export default function Sidebar() {
           Ученики
         </Link>
         <Link as={NavLink} to="/groups">
-          Группы
+          Классы
         </Link>
         <Link as={NavLink} to="/teachers">
           Учителя

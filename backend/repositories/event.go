@@ -34,25 +34,25 @@ func (r *EventRepository) Update(event *models.Event) error {
 
 	updates := map[string]interface{}{}
 
-	if event.Type != "" {
+	if event.Type != nil {
 		updates["type"] = event.Type
 	}
-	if event.Name != "" {
+	if event.Name != nil {
 		updates["name"] = event.Name
 	}
-	if event.Description != "" {
+	if event.Description != nil {
 		updates["description"] = event.Description
 	}
-	if event.RoomID != 0 {
+	if event.RoomID != nil {
 		updates["room_id"] = event.RoomID
 	}
-	if event.EventDate.IsZero() {
+	if event.EventDate != nil {
 		updates["event_date"] = event.EventDate
 	}
-	if event.TimeStart.IsZero() {
+	if event.TimeStart != nil {
 		updates["time_start"] = event.TimeStart
 	}
-	if event.TimeEnd.IsZero() {
+	if event.TimeEnd != nil {
 		updates["time_end"] = event.TimeEnd
 	}
 

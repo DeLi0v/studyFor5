@@ -37,19 +37,19 @@ func (r *EventGradeRepository) Create(eventGrade *models.EventGrade) error {
 func (r *EventGradeRepository) Update(eg *models.EventGrade) error {
 	updates := map[string]interface{}{}
 
-	if eg.StudentID != 0 {
+	if eg.StudentID != nil {
 		updates["student_id"] = eg.StudentID
 	}
-	if eg.EventID != 0 {
+	if eg.EventID != nil {
 		updates["event_id"] = eg.EventID
 	}
-	if eg.EventID != 0 {
+	if eg.EventID != nil {
 		updates["date_given"] = eg.DateGiven
 	}
-	if eg.EventID != 0 {
+	if eg.EventID != nil {
 		updates["score"] = eg.Score
 	}
-	if eg.EventID != 0 {
+	if eg.EventID != nil {
 		updates["graded_by"] = eg.GradedBy
 	}
 

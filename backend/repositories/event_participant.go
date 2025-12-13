@@ -37,13 +37,13 @@ func (r *EventParticipantRepository) Create(participant *models.EventParticipant
 func (r *EventParticipantRepository) Update(participant *models.EventParticipant) error {
 	updates := map[string]interface{}{}
 
-	if participant.EventID != 0 {
+	if participant.EventID != nil {
 		updates["participant_id"] = participant.EventID
 	}
-	if participant.ParticipantType != "" {
+	if participant.ParticipantType != nil {
 		updates["participant_type"] = participant.ParticipantType
 	}
-	if participant.ParticipantID != 0 {
+	if participant.ParticipantID != nil {
 		updates["participant_id"] = participant.ParticipantID
 	}
 

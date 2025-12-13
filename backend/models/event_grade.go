@@ -6,12 +6,12 @@ import (
 
 type EventGrade struct {
 	ID        uint `gorm:"primaryKey;autoIncrement"`
-	GradedBy  uint
+	GradedBy  *uint
 	Teacher   Teacher `gorm:"foreignKey:GradedBy"`
-	EventID   uint
+	EventID   *uint
 	Event     Event `gorm:"foreignKey:EventID"`
-	StudentID uint
-	Student   Student `gorm:"foreignKey:StudentID"`
-	DateGiven time.Time
-	Score     uint
+	StudentID *uint
+	Student   Student    `gorm:"foreignKey:StudentID"`
+	DateGiven *time.Time `gorm:"type:date"`
+	Score     *uint
 }

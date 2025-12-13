@@ -38,26 +38,26 @@ func (r *TeacherRepository) Create(teacher *models.Teacher) error {
 func (r *TeacherRepository) Update(teacher *models.Teacher) error {
 	updates := map[string]interface{}{}
 
-	if teacher.FirstName != "" {
+	if teacher.FirstName != nil {
 		updates["first_name"] = teacher.FirstName
 	}
-	if teacher.LastName != "" {
+	if teacher.LastName != nil {
 		updates["last_name"] = teacher.LastName
 	}
-	if teacher.MiddleName != "" {
+	if teacher.MiddleName != nil {
 		updates["middle_name"] = teacher.MiddleName
 	}
-	if teacher.PositionID != 0 {
+	if teacher.PositionID != nil {
 		updates["position_id"] = teacher.PositionID
 		fmt.Print(teacher.PositionID)
 	}
-	if teacher.SpecialtyID != 0 {
+	if teacher.SpecialtyID != nil {
 		updates["specialty_id"] = teacher.SpecialtyID
 	}
-	if teacher.Phone != 0 {
+	if teacher.Phone != nil {
 		updates["phone"] = teacher.Phone
 	}
-	if teacher.Email != "" {
+	if teacher.Email != nil {
 		updates["email"] = teacher.Email
 	}
 

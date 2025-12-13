@@ -1,13 +1,23 @@
+// TeacherPage.jsx
 import EntityPage from "../components/EntityPage";
 
 export default function Groups() {
   return (
     <EntityPage
-      title="Группы"
+      title="Классы"
       entityName="groups"
-      fields={["Name", "SpecialtyID"]}
-      relations={{ specialties: { field: "SpecialtyID" } }}
-      headers={{ Name: "Название", SpecialtyID: "Специальность" }}
+      columns={[
+        { field: "Number", label: "Номер" },
+        { field: "Parallel", label: "Параллель" },
+        { field: "AdmissionDate", label: "Дата поступления" },
+        { field: "ClassTeacherID", label: "Классный руководитель" },
+      ]}
+      relations={{
+        teachers: {
+          field: "ClassTeacherID",
+          displayField: "FirstName",
+        },
+      }}
     />
   );
 }

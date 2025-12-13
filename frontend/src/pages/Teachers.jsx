@@ -10,21 +10,31 @@ export default function Teachers() {
         { field: "FirstName", label: "Имя" },
         { field: "LastName", label: "Фамилия" },
         { field: "MiddleName", label: "Отчество" },
-        { field: "Phone", label: "Телефон" },
-        { field: "Email", label: "Email" },
-        { field: "PositionID", label: "Должность" },
-        { field: "SpecialtyID", label: "Специальность" },
+        {
+          field: "Phone",
+          label: "Телефон",
+          type: "phone",
+        },
+        { field: "Email", label: "Email", type: "email" },
+        {
+          field: "PositionID",
+          label: "Должность",
+          options: "positions",
+          type: "select",
+        },
+        {
+          field: "SpecialtyID",
+          label: "Специальность",
+          options: "specialties",
+          type: "select",
+        },
       ]}
       relations={{
         positions: {
           field: "PositionID",
-          displayField: "Name",
-          displayFieldInTable: "Name", // Поле для отображения в таблице
         },
         specialties: {
           field: "SpecialtyID",
-          displayField: "Name",
-          displayFieldInTable: "Name", // Поле для отображения в таблице
         },
       }}
     />

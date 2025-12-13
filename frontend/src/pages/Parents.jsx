@@ -1,11 +1,22 @@
-// Teachers.jsx
-import { Box, Heading } from "@chakra-ui/react";
+// TeacherPage.jsx
+import EntityPage from "../components/EntityPage";
 
-export default function Teachers() {
+export default function Parents() {
   return (
-    <Box p={6}>
-      <Heading>Родители</Heading>
-      <p>Здесь будет список учителей</p>
-    </Box>
+    <EntityPage
+      title="Родители"
+      entityName="parents"
+      columns={[
+        { field: "FirstName", label: "Имя" },
+        { field: "LastName", label: "Фамилия" },
+        { field: "MiddleName", label: "Отчество" },
+        {
+          field: "Phone",
+          label: "Телефон",
+          type: "phone",
+        },
+        { field: "Email", label: "Email", type: "email" },
+      ]}
+    />
   );
 }

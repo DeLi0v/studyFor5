@@ -1,15 +1,11 @@
 import EntityPage from "../components/EntityPage";
 
-export default function Teachers() {
+export default function Positions() {
   return (
     <EntityPage
       title="Должности"
       entityName="positions"
-      fields={["Name"]}
-      relations={{}}
-      headers={{
-        Name: "Наименование",
-      }}
+      columns={[{ field: "Name", label: "Наименование" }]}
     />
   );
 }

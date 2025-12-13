@@ -37,28 +37,28 @@ func (r *LessonRepository) Create(lesson *models.Lesson) error {
 func (r *LessonRepository) Update(lesson *models.Lesson) error {
 	updates := map[string]interface{}{}
 
-	if lesson.GroupID != 0 {
+	if lesson.GroupID != nil {
 		updates["group_id"] = lesson.GroupID
 	}
-	if lesson.SubjectID != 0 {
+	if lesson.SubjectID != nil {
 		updates["subject_id"] = lesson.SubjectID
 	}
-	if lesson.TeacherID != 0 {
+	if lesson.TeacherID != nil {
 		updates["teacher_id"] = lesson.TeacherID
 	}
-	if lesson.RoomID != 0 {
+	if lesson.RoomID != nil {
 		updates["room_id"] = lesson.RoomID
 	}
-	if lesson.Weekday != 0 {
+	if lesson.Weekday != nil {
 		updates["weekday"] = lesson.Weekday
 	}
-	if lesson.TimeStart.IsZero() {
+	if lesson.TimeStart != nil {
 		updates["time_start"] = lesson.TimeStart
 	}
-	if lesson.TimeEnd.IsZero() {
+	if lesson.TimeEnd != nil {
 		updates["time_end"] = lesson.TimeEnd
 	}
-	if lesson.EndDate.IsZero() {
+	if lesson.EndDate != nil {
 		updates["end_date"] = lesson.EndDate
 	}
 

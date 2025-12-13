@@ -37,7 +37,7 @@ func (r *SubjectRepository) Create(subject *models.Subject) error {
 func (r *SubjectRepository) Update(subject *models.Subject) error {
 	updates := map[string]interface{}{}
 
-	if subject.Name != "" {
+	if subject.Name != nil {
 		updates["name"] = subject.Name
 	}
 

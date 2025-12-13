@@ -83,7 +83,6 @@ func (h *StudentRelationHandler) Create(c *gin.Context) {
 }
 
 // PUT /student_relations/:student_id/:parent_id
-// PUT /student_relations/:student_id/:parent_id
 func (h *StudentRelationHandler) Update(c *gin.Context) {
 	studentID, _ := strconv.ParseUint(c.Param("student_id"), 10, 64)
 	parentID, _ := strconv.ParseUint(c.Param("parent_id"), 10, 64)

@@ -37,22 +37,22 @@ func (r *StudentRepository) Create(student *models.Student) error {
 func (r *StudentRepository) Update(student *models.Student) error {
 	updates := map[string]interface{}{}
 
-	if student.FirstName != "" {
+	if student.FirstName != nil {
 		updates["first_name"] = student.FirstName
 	}
-	if student.LastName != "" {
+	if student.LastName != nil {
 		updates["last_name"] = student.LastName
 	}
-	if student.MiddleName != "" {
+	if student.MiddleName != nil {
 		updates["middle_name"] = student.MiddleName
 	}
-	if student.GroupID != 0 {
+	if student.GroupID != nil {
 		updates["group_id"] = student.GroupID
 	}
-	if student.Phone != 0 {
+	if student.Phone != nil {
 		updates["phone"] = student.Phone
 	}
-	if student.Email != "" {
+	if student.Email != nil {
 		updates["email"] = student.Email
 	}
 

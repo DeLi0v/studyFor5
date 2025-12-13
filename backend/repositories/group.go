@@ -37,16 +37,16 @@ func (r *GroupRepository) Create(group *models.Group) error {
 func (r *GroupRepository) Update(group *models.Group) error {
 	updates := map[string]interface{}{}
 
-	if group.Number != "" {
+	if group.Number != nil {
 		updates["number"] = group.Number
 	}
-	if group.Parallel != 0 {
+	if group.Parallel != nil {
 		updates["parallel"] = group.Parallel
 	}
-	if group.AdmissionDate.IsZero() {
+	if group.AdmissionDate != nil {
 		updates["admission_date"] = group.AdmissionDate
 	}
-	if group.ClassTeacherID != 0 {
+	if group.ClassTeacherID != nil {
 		updates["class_teacher_id"] = group.ClassTeacherID
 	}
 

@@ -37,22 +37,22 @@ func (r *GradeRepository) Create(grade *models.Grade) error {
 func (r *GradeRepository) Update(grade *models.Grade) error {
 	updates := map[string]interface{}{}
 
-	if grade.Type != "" {
+	if grade.Type != nil {
 		updates["type"] = grade.Type
 	}
-	if grade.SubjectID != 0 {
+	if grade.SubjectID != nil {
 		updates["subject_id"] = grade.SubjectID
 	}
-	if grade.StudentID != 0 {
+	if grade.StudentID != nil {
 		updates["student_id"] = grade.StudentID
 	}
-	if grade.DateGiven.IsZero() {
+	if grade.DateGiven != nil {
 		updates["date_given"] = grade.DateGiven
 	}
-	if grade.Score != 0 {
+	if grade.Score != nil {
 		updates["score"] = grade.Score
 	}
-	if grade.GradedBy != 0 {
+	if grade.GradedBy != nil {
 		updates["graded_by"] = grade.GradedBy
 	}
 

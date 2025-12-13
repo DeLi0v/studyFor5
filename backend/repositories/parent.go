@@ -17,14 +17,14 @@ func NewParentRepository(db *gorm.DB) *ParentRepository {
 // Получить всех участников события
 func (r *ParentRepository) GetAll() ([]models.Parent, error) {
 	var parents []models.Parent
-	result := r.db.Preload("parents").Find(&parents)
+	result := r.db.Preload("Students").Find(&parents)
 	return parents, result.Error
 }
 
 // Получить участника события по ID
 func (r *ParentRepository) GetByID(id uint) (*models.Parent, error) {
 	var parent models.Parent
-	result := r.db.Preload("parents").First(&parent, id)
+	result := r.db.Preload("Students").First(&parent, id)
 	return &parent, result.Error
 }
 
@@ -37,19 +37,19 @@ func (r *ParentRepository) Create(parent *models.Parent) error {
 func (r *ParentRepository) Update(parent *models.Parent) error {
 	updates := map[string]interface{}{}
 
-	if parent.FirstName != "" {
+	if parent.FirstName != nil {
 		updates["first_name"] = parent.FirstName
 	}
-	if parent.LastName != "" {
+	if parent.LastName != nil {
 		updates["last_name"] = parent.LastName
 	}
-	if parent.MiddleName != "" {
+	if parent.MiddleName != nil {
 		updates["middle_name"] = parent.MiddleName
 	}
-	if parent.Phone != 0 {
+	if parent.Phone != nil {
 		updates["phone"] = parent.Phone
 	}
-	if parent.Email != "" {
+	if parent.Email != nil {
 		updates["email"] = parent.Email
 	}
 
