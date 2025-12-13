@@ -25,42 +25,19 @@ import {
   Select,
   useDisclosure,
 } from "@chakra-ui/react";
-
-// ======= Заглушка API (замените на свой API) =======
-const mockData = {
-  employees: [
-    { ID: 1, FirstName: "Пётр", LastName: "Петров", PositionID: 1 },
-    { ID: 2, FirstName: "Анна", LastName: "Иванова", PositionID: 2 },
-  ],
-  positions: [
-    { ID: 1, Name: "Учитель" },
-    { ID: 2, Name: "Директор" },
-  ],
-};
-
-const getAll = async (entity) => {
-  return new Promise((resolve) =>
-    setTimeout(() => resolve(mockData[entity]), 200)
-  );
-};
-const create = async (entity, payload) => {
-  mockData[entity].push({ ID: Date.now(), ...payload });
-};
-const update = async (entity, id, payload) => {
-  const idx = mockData[entity].findIndex((e) => e.ID === id);
-  if (idx >= 0)
-    mockData[entity][idx] = { ...mockData[entity][idx], ...payload };
-};
-const remove = async (entity, id) => {
-  mockData[entity] = mockData[entity].filter((e) => e.ID !== id);
-};
-// ===================================================
+import { getAll, create, update, remove } from "../api/index";
 
 export default function EntityPage({
   title,
   entityName,
   columns = [], // [{ field, label, type?, render? }]
-  relations = {}, // { positions: { field: "PositionID", displayField: "Name" } }
+  relations = {}, // {
+  //   positions: {
+  //     field: "PositionID",
+  //     displayField: "Name",
+  //     displayFieldInTable: "PositionName" // новое поле
+  //   }
+  // }
 }) {
   const [data, setData] = useState([]);
   const [relatedData, setRelatedData] = useState({});
@@ -72,6 +49,7 @@ export default function EntityPage({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [form, setForm] = useState({});
 
+  // Загрузка данных
   useEffect(() => {
     setLoading(true);
     const relatedPromises = Object.keys(relations).map((key) => getAll(key));
@@ -100,18 +78,30 @@ export default function EntityPage({
   const handleSubmit = async () => {
     try {
       const payload = {};
+
+      // Преобразуем данные формы в payload для отправки
       columns.forEach(({ field }) => {
+        // Проверяем, является ли поле связанной сущностью
         const relKey = Object.keys(relations).find(
           (k) => relations[k].field === field
         );
-        if (relKey)
+
+        if (relKey) {
+          // Для связанных сущностей отправляем ID (число или null)
           payload[field] = form[field] === "" ? null : Number(form[field]);
-        else payload[field] = form[field] ?? null;
+        } else {
+          // Для обычных полей отправляем как есть
+          payload[field] = form[field] ?? null;
+        }
       });
 
-      if (current) await update(entityName, current.ID, payload);
-      else await create(entityName, payload);
+      if (current) {
+        await update(entityName, current.ID, payload);
+      } else {
+        await create(entityName, payload);
+      }
 
+      // Обновляем данные после сохранения
       const res = await getAll(entityName);
       setData(Array.isArray(res) ? res : []);
       onClose();
@@ -122,7 +112,9 @@ export default function EntityPage({
       setError(null);
     } catch (err) {
       console.error(err);
-      setFormError("Ошибка при сохранении данных");
+      setFormError(
+        "Ошибка при сохранении данных. Проверьте поля и попробуйте снова."
+      );
       setInvalidFields(columns.map((c) => c.field));
     }
   };
@@ -131,12 +123,22 @@ export default function EntityPage({
     setInvalidFields([]);
     setCurrent(item);
     const initialForm = {};
+
     columns.forEach(({ field }) => {
+      // Проверяем, является ли поле связанной сущностью
       const relKey = Object.keys(relations).find(
         (k) => relations[k].field === field
       );
-      initialForm[field] = relKey ? item[field] || "" : item[field] || "";
+
+      if (relKey) {
+        // Для связанных сущностей устанавливаем ID как значение
+        initialForm[field] = item[field] || "";
+      } else {
+        // Для обычных полей устанавливаем значение из записи
+        initialForm[field] = item[field] || "";
+      }
     });
+
     setForm(initialForm);
     setFormError(null);
     onOpen();
@@ -149,40 +151,61 @@ export default function EntityPage({
       setData((prev) => prev.filter((d) => d.ID !== id));
     } catch (err) {
       console.error(err);
-      setError("Ошибка при удалении записи");
+      setError(
+        "Ошибка при удалении записи, остальная информация отображается."
+      );
     }
   };
 
   const renderCell = (item, { field, render }) => {
+    // Если есть кастомный рендер, используем его
     if (render) return render(item, relatedData);
 
+    // Проверяем, является ли поле связанной сущностью
     const relKey = Object.keys(relations).find(
       (k) => relations[k].field === field
     );
+
     if (relKey) {
+      const relationConfig = relations[relKey];
       const relatedItem = relatedData[relKey]?.find(
         (r) => r.ID === item[field]
       );
-      return relatedItem
-        ? relatedItem[relations[relKey].displayField || "Name"]
-        : "-";
+
+      if (!relatedItem) return "-";
+
+      // Если указано поле для отображения в таблице, используем его
+      if (
+        relationConfig.displayFieldInTable &&
+        relatedItem[relationConfig.displayFieldInTable]
+      ) {
+        return relatedItem[relationConfig.displayFieldInTable];
+      }
+
+      // Иначе используем поле для отображения или "Name" по умолчанию
+      const displayField = relationConfig.displayField || "Name";
+      return relatedItem[displayField] || "-";
     }
 
+    // Для обычных полей возвращаем значение
     return item[field] ?? "-";
   };
 
   return (
     <Box p={6}>
       <Heading mb={4}>{title}</Heading>
+
       {error && (
         <Alert status="error" mb={4}>
           <AlertIcon />
           {error}
         </Alert>
       )}
+
       <Button colorScheme="blue" mb={4} onClick={onOpen}>
         Добавить
       </Button>
+
       {loading ? (
         <Spinner size="xl" mt={10} />
       ) : (
@@ -255,7 +278,11 @@ export default function EntityPage({
               );
               const isInvalid = invalidFields.includes(c.field);
 
+              // Если поле является связанной сущностью, показываем select
               if (relKey) {
+                const relationConfig = relations[relKey];
+                const displayField = relationConfig.displayField || "Name";
+
                 return (
                   <FormControl mb={3} key={c.field}>
                     <FormLabel>{c.label}</FormLabel>
@@ -269,7 +296,7 @@ export default function EntityPage({
                       {Array.isArray(relatedData[relKey]) &&
                         relatedData[relKey].map((r) => (
                           <option key={r.ID} value={r.ID}>
-                            {r[relations[relKey].displayField || "Name"] || "-"}
+                            {r[displayField] || "-"} (ID: {r.ID})
                           </option>
                         ))}
                     </Select>
@@ -277,6 +304,7 @@ export default function EntityPage({
                 );
               }
 
+              // Обычные поля (input)
               return (
                 <FormControl mb={3} key={c.field}>
                   <FormLabel>{c.label}</FormLabel>
@@ -297,6 +325,7 @@ export default function EntityPage({
               </Alert>
             )}
           </ModalBody>
+
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
               Сохранить
@@ -317,36 +346,5 @@ export default function EntityPage({
         </ModalContent>
       </Modal>
     </Box>
-  );
-}
-
-// ======= Использование компонента =======
-export function App() {
-  const columns = [
-    { field: "FirstName", label: "Имя" },
-    { field: "LastName", label: "Фамилия" },
-    {
-      field: "PositionID",
-      label: "Должность",
-      render: (item, relatedData) => {
-        const pos = relatedData.positions?.find(
-          (p) => p.ID === item.PositionID
-        );
-        return pos ? pos.Name : "-";
-      },
-    },
-  ];
-
-  const relations = {
-    positions: { field: "PositionID", displayField: "Name" },
-  };
-
-  return (
-    <EntityPage
-      title="Сотрудники"
-      entityName="employees"
-      columns={columns}
-      relations={relations}
-    />
   );
 }

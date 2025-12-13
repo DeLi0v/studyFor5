@@ -12,32 +12,20 @@ export default function Teachers() {
         { field: "MiddleName", label: "Отчество" },
         { field: "Phone", label: "Телефон" },
         { field: "Email", label: "Email" },
-        {
-          field: "PositionID",
-          label: "Должность",
-          render: (item, relatedData) => {
-            // Если хочешь кастомное отображение
-            const pos = relatedData.positions?.find(
-              (p) => p.ID === item.position_id
-            );
-            return pos ? `${pos.Name}` : "-";
-          },
-        },
-
-        {
-          field: "specialty_id",
-          label: "Специальность",
-          render: (item, relatedData) => {
-            const spec = relatedData.specialties?.find(
-              (s) => s.ID === item.specialty_id
-            );
-            return spec?.Name || "-";
-          },
-        },
+        { field: "PositionID", label: "Должность" },
+        { field: "SpecialtyID", label: "Специальность" },
       ]}
       relations={{
-        positions: { field: "position_id" },
-        specialties: { field: "specialty_id" },
+        positions: {
+          field: "PositionID",
+          displayField: "Name",
+          displayFieldInTable: "Name", // Поле для отображения в таблице
+        },
+        specialties: {
+          field: "SpecialtyID",
+          displayField: "Name",
+          displayFieldInTable: "Name", // Поле для отображения в таблице
+        },
       }}
     />
   );

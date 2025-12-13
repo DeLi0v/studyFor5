@@ -1,7 +1,7 @@
 // TeacherPage.jsx
 import EntityPage from "../components/EntityPage";
 
-export default function Subjects() {
+export default function Teachers() {
   return (
     <EntityPage
       title="Предметы"
