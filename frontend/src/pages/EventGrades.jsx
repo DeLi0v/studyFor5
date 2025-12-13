@@ -5,12 +5,17 @@ export default function EventGrades() {
     <EntityPage
       title="Оценки за события"
       entityName="eventGrades"
-      fields={["StudentID", "EventID", "Grade"]}
-      relations={{
-        students: { field: "StudentID" },
-        events: { field: "EventID" },
-      }}
-      headers={{ StudentID: "Студент", EventID: "Событие", Grade: "Оценка" }}
+      columns={[
+        {
+          field: "StudentID",
+          label: "Ученик",
+          options: "students",
+          displayField: "ProductName",
+        },
+        { field: "EventID", label: "Мероприятие", options: "events" },
+        { field: "Score", label: "Оценка" },
+        { field: "DateGiven", label: "Дата" },
+      ]}
     />
   );
 }

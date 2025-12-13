@@ -1,13 +1,11 @@
-// TeacherPage.jsx
 import EntityPage from "../components/EntityPage";
 
-export default function Teachers() {
+export default function Subjects() {
   return (
     <EntityPage
       title="Предметы"
       entityName="subjects"
-      columns={[{ field: "Name", label: "Название" }]}
-      relations={{}}
+      columns={[{ field: "Name", label: "Имя" }]}
     />
   );
 }
