@@ -34,9 +34,8 @@ func (s *TeacherService) GetByID(id uint) (*models.Teacher, error) {
 
 // Create — создаёт новую запись.
 // Обычно вызывается контроллером POST /xxx
-func (s *TeacherService) Create(m *models.Teacher) error {
-	// Здесь можно добавить бизнес-валидацию, если нужно.
-	return s.repo.Create(m)
+func (s *TeacherService) Create(t *models.Teacher) error {
+	return s.repo.Create(t)
 }
 
 // Update — обновляет существующую запись.

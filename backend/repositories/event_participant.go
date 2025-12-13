@@ -17,14 +17,14 @@ func NewEventParticipantRepository(db *gorm.DB) *EventParticipantRepository {
 // Получить всех участников события
 func (r *EventParticipantRepository) GetAll() ([]models.EventParticipant, error) {
 	var participants []models.EventParticipant
-	result := r.db.Find(&participants)
+	result := r.db.Preload("Event").Find(&participants)
 	return participants, result.Error
 }
 
 // Получить участника события по ID
 func (r *EventParticipantRepository) GetByID(id uint) (*models.EventParticipant, error) {
 	var participant models.EventParticipant
-	result := r.db.First(&participant, id)
+	result := r.db.Preload("Event").First(&participant, id)
 	return &participant, result.Error
 }
 

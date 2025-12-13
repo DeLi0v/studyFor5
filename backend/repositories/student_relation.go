@@ -18,15 +18,29 @@ func NewStudentRelationRepository(db *gorm.DB) *StudentRelationRepository {
 // GetAll — получить все связи студентов и родителей
 func (r *StudentRelationRepository) GetAll() ([]models.StudentRelation, error) {
 	var relations []models.StudentRelation
-	result := r.db.Find(&relations)
+	result := r.db.Preload("Student").Preload("Parent").Find(&relations)
 	return relations, result.Error
 }
 
 // GetByID — получить связь по составному ключу (StudentID, ParentID)
 func (r *StudentRelationRepository) GetByID(studentID, parentID uint) (*models.StudentRelation, error) {
 	var rel models.StudentRelation
-	result := r.db.First(&rel, "student_id = ? AND parent_id = ?", studentID, parentID)
+	result := r.db.Preload("Student").Preload("Parent").First(&rel, "student_id = ? AND parent_id = ?", studentID, parentID)
 	return &rel, result.Error
+}
+
+// GetParentsByStudentID — получить всех родителей по ID студента
+func (r *StudentRelationRepository) GetParentsByStudentID(studentID uint) ([]models.StudentRelation, error) {
+	var relations []models.StudentRelation
+	result := r.db.Where("student_id = ?", studentID).Preload("Student").Preload("Parent").Find(&relations)
+	return relations, result.Error
+}
+
+// GetStudentsByParentID — получить всех студентов по ID родителя
+func (r *StudentRelationRepository) GetStudentsByParentID(parentID uint) ([]models.StudentRelation, error) {
+	var relations []models.StudentRelation
+	result := r.db.Where("parent_id = ?", parentID).Preload("Student").Preload("Parent").Find(&relations)
+	return relations, result.Error
 }
 
 // Create — добавить новую связь

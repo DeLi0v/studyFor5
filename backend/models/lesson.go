@@ -2,12 +2,10 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type Lesson struct {
-	gorm.Model
+	ID        uint      `gorm:"primaryKey;autoIncrement"`
 	GroupID   uint      `gorm:"not null"`
 	Group     Group     `gorm:"foreignKey:GroupID"`
 	SubjectID uint      `gorm:"not null"`

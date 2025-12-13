@@ -17,14 +17,14 @@ func NewRoomRepository(db *gorm.DB) *RoomRepository {
 // Получить всех участников события
 func (r *RoomRepository) GetAll() ([]models.Room, error) {
 	var rooms []models.Room
-	result := r.db.Find(&rooms)
+	result := r.db.Preload("Lessons").Preload("Events").Find(&rooms)
 	return rooms, result.Error
 }
 
 // Получить участника события по ID
 func (r *RoomRepository) GetByID(id uint) (*models.Room, error) {
 	var room models.Room
-	result := r.db.First(&room, id)
+	result := r.db.Preload("Lessons").Preload("Events").First(&room, id)
 	return &room, result.Error
 }
 

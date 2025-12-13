@@ -17,14 +17,14 @@ func NewGroupRepository(db *gorm.DB) *GroupRepository {
 // Получить всех участников события
 func (r *GroupRepository) GetAll() ([]models.Group, error) {
 	var groups []models.Group
-	result := r.db.Find(&groups)
+	result := r.db.Preload("Students").Preload("Lessons").Find(&groups)
 	return groups, result.Error
 }
 
 // Получить участника события по ID
 func (r *GroupRepository) GetByID(id uint) (*models.Group, error) {
 	var group models.Group
-	result := r.db.First(&group, id)
+	result := r.db.Preload("Students").Preload("Lessons").First(&group, id)
 	return &group, result.Error
 }
 

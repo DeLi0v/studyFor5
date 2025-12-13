@@ -2,12 +2,10 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type Event struct {
-	gorm.Model
+	ID           uint   `gorm:"primaryKey;autoIncrement"`
 	Type         string `gorm:"type:event_type;not null"`
 	Name         string `gorm:"not null"`
 	Description  string
@@ -17,5 +15,4 @@ type Event struct {
 	TimeStart    time.Time
 	TimeEnd      time.Time
 	Participants []EventParticipant `gorm:"foreignKey:EventID"`
-	EventGrades  []EventGrade       `gorm:"foreignKey:EventID"`
 }

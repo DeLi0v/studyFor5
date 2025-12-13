@@ -22,6 +22,14 @@ func (s *StudentRelationService) GetByID(studentID, parentID uint) (*models.Stud
 	return s.repo.GetByID(studentID, parentID)
 }
 
+func (s *StudentRelationService) GetParentsByStudentID(studentID uint) ([]models.StudentRelation, error) {
+	return s.repo.GetParentsByStudentID(studentID)
+}
+
+func (s *StudentRelationService) GetStudentsByParentID(parentID uint) ([]models.StudentRelation, error) {
+	return s.repo.GetStudentsByParentID(parentID)
+}
+
 func (s *StudentRelationService) Create(rel *models.StudentRelation) error {
 	return s.repo.Create(rel)
 }

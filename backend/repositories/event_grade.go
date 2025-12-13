@@ -17,14 +17,14 @@ func NewEventGradeRepository(db *gorm.DB) *EventGradeRepository {
 // Получить всех участников события
 func (r *EventGradeRepository) GetAll() ([]models.EventGrade, error) {
 	var eventGrades []models.EventGrade
-	result := r.db.Find(&eventGrades)
+	result := r.db.Preload("Teacher").Preload("Event").Preload("Student").Find(&eventGrades)
 	return eventGrades, result.Error
 }
 
 // Получить участника события по ID
 func (r *EventGradeRepository) GetByID(id uint) (*models.EventGrade, error) {
 	var eventGrade models.EventGrade
-	result := r.db.First(&eventGrade, id)
+	result := r.db.Preload("Teacher").Preload("Event").Preload("Student").First(&eventGrade, id)
 	return &eventGrade, result.Error
 }
 

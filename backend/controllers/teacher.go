@@ -29,37 +29,36 @@ func (h *TeacherHandler) GetAll(c *gin.Context) {
 
 // GET /teachers/:id
 func (h *TeacherHandler) GetByID(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
 		return
 	}
 
-	item, err := h.service.GetByID(uint(id))
+	teacher, err := h.service.GetByID(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, item)
+	c.JSON(http.StatusOK, teacher)
 }
 
 // POST /teachers
 func (h *TeacherHandler) Create(c *gin.Context) {
-	var item models.Teacher
-
-	if err := c.ShouldBindJSON(&item); err != nil {
+	var t models.Teacher
+	if err := c.ShouldBindJSON(&t); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.service.Create(&item); err != nil {
+	if err := h.service.Create(&t); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, item)
+	teacher, _ := h.service.GetByID(t.ID)
+	c.JSON(http.StatusCreated, teacher)
 }
 
 // PUT /teachers/:id

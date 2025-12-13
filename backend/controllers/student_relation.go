@@ -41,6 +41,32 @@ func (h *StudentRelationHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, rel)
 }
 
+// GET /students/:id/parents
+func (h *StudentRelationHandler) GetParentsByStudent(c *gin.Context) {
+	studentID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+
+	relations, err := h.service.GetParentsByStudentID(uint(studentID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, relations)
+}
+
+// GET /parents/:id/students
+func (h *StudentRelationHandler) GetStudentsByParent(c *gin.Context) {
+	parentID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+
+	relations, err := h.service.GetStudentsByParentID(uint(parentID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, relations)
+}
+
 // POST /student_relations
 func (h *StudentRelationHandler) Create(c *gin.Context) {
 	var rel models.StudentRelation

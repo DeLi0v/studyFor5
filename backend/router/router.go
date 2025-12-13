@@ -16,6 +16,12 @@ func SetupRouter(
 	studentHandler *handlers.StudentHandler,
 	studentRelationHandler *handlers.StudentRelationHandler,
 	teacherHandler *handlers.TeacherHandler,
+	parentHandler *handlers.ParentHandler,
+	positionHandler *handlers.PositionHandler,
+	lessonHandler *handlers.LessonHandler,
+	roomHandler *handlers.RoomHandler,
+	specialtyHandler *handlers.SpecialtyHandler,
+	subjectHandler *handlers.SubjectHandler,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -66,6 +72,7 @@ func SetupRouter(
 	student := api.Group("/students")
 	student.GET("", studentHandler.GetAll)
 	student.GET("/:id", studentHandler.GetByID)
+	student.GET("/:id/parents", studentRelationHandler.GetParentsByStudent)
 	student.POST("", studentHandler.Create)
 	student.PUT("/:id", studentHandler.Update)
 	student.DELETE("/:id", studentHandler.Delete)
@@ -85,6 +92,55 @@ func SetupRouter(
 	teacher.POST("", teacherHandler.Create)
 	teacher.PUT("/:id", teacherHandler.Update)
 	teacher.DELETE("/:id", teacherHandler.Delete)
+
+	// Parent
+	parent := api.Group("/parents")
+	parent.GET("", parentHandler.GetAll)
+	parent.GET("/:id", parentHandler.GetByID)
+	parent.GET("/parents/:id/students", studentRelationHandler.GetStudentsByParent)
+	parent.POST("", parentHandler.Create)
+	parent.PUT("/:id", parentHandler.Update)
+	parent.DELETE("/:id", parentHandler.Delete)
+
+	// Lesson
+	lesson := api.Group("/lessons")
+	lesson.GET("", lessonHandler.GetAll)
+	lesson.GET("/:id", lessonHandler.GetByID)
+	lesson.POST("", lessonHandler.Create)
+	lesson.PUT("/:id", lessonHandler.Update)
+	lesson.DELETE("/:id", lessonHandler.Delete)
+
+	// Position
+	position := api.Group("/positions")
+	position.GET("", positionHandler.GetAll)
+	position.GET("/:id", positionHandler.GetByID)
+	position.POST("", positionHandler.Create)
+	position.PUT("/:id", positionHandler.Update)
+	position.DELETE("/:id", positionHandler.Delete)
+
+	// Room
+	room := api.Group("/rooms")
+	room.GET("", roomHandler.GetAll)
+	room.GET("/:id", roomHandler.GetByID)
+	room.POST("", roomHandler.Create)
+	room.PUT("/:id", roomHandler.Update)
+	room.DELETE("/:id", roomHandler.Delete)
+
+	// Specialty
+	specialty := api.Group("/specialties")
+	specialty.GET("", specialtyHandler.GetAll)
+	specialty.GET("/:id", specialtyHandler.GetByID)
+	specialty.POST("", specialtyHandler.Create)
+	specialty.PUT("/:id", specialtyHandler.Update)
+	specialty.DELETE("/:id", specialtyHandler.Delete)
+
+	// Subject
+	subject := api.Group("/subjects")
+	subject.GET("", subjectHandler.GetAll)
+	subject.GET("/:id", subjectHandler.GetByID)
+	subject.POST("", subjectHandler.Create)
+	subject.PUT("/:id", subjectHandler.Update)
+	subject.DELETE("/:id", subjectHandler.Delete)
 
 	return r
 }

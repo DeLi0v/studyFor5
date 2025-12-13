@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type Teacher struct {
-	gorm.Model
+	ID          uint   `gorm:"primaryKey;autoIncrement"`
 	FirstName   string `gorm:"not null"`
 	LastName    string `gorm:"not null"`
 	MiddleName  string
@@ -11,10 +9,7 @@ type Teacher struct {
 	Position    Position  `gorm:"foreignKey:PositionID"`
 	SpecialtyID uint      `gorm:"not null"` // FK на Specialties
 	Specialty   Specialty `gorm:"foreignKey:SpecialtyID"`
-	Phone       string    `gorm:"not null"`
+	Phone       uint      `gorm:"not null"`
 	Email       string
-	Groups      []Group      `gorm:"foreignKey:ClassTeacherID"` // Классный руководитель
-	Lessons     []Lesson     `gorm:"foreignKey:TeacherID"`
-	Grades      []Grade      `gorm:"foreignKey:GradedBy"`
-	EventGrades []EventGrade `gorm:"foreignKey:GradedBy"`
+	Groups      []Group `gorm:"foreignKey:ClassTeacherID"` // Классный руководитель
 }

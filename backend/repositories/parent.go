@@ -17,14 +17,14 @@ func NewParentRepository(db *gorm.DB) *ParentRepository {
 // Получить всех участников события
 func (r *ParentRepository) GetAll() ([]models.Parent, error) {
 	var parents []models.Parent
-	result := r.db.Find(&parents)
+	result := r.db.Preload("Students").Find(&parents)
 	return parents, result.Error
 }
 
 // Получить участника события по ID
 func (r *ParentRepository) GetByID(id uint) (*models.Parent, error) {
 	var parent models.Parent
-	result := r.db.First(&parent, id)
+	result := r.db.Preload("Students").First(&parent, id)
 	return &parent, result.Error
 }
 

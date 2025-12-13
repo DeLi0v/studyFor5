@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type Parent struct {
-	gorm.Model
+	ID         uint `gorm:"primaryKey;autoIncrement"`
 	FirstName  string
 	LastName   string
 	MiddleName string

@@ -17,7 +17,7 @@ func NewSpecialtyHandler(service *services.SpecialtyService) *SpecialtyHandler {
 	return &SpecialtyHandler{service: service}
 }
 
-// GET /specials
+// GET /specialties
 func (h *SpecialtyHandler) GetAll(c *gin.Context) {
 	items, err := h.service.GetAll()
 	if err != nil {
@@ -27,7 +27,7 @@ func (h *SpecialtyHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, items)
 }
 
-// GET /specials/:id
+// GET /specialties/:id
 func (h *SpecialtyHandler) GetByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -45,7 +45,7 @@ func (h *SpecialtyHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
-// POST /specials
+// POST /specialties
 func (h *SpecialtyHandler) Create(c *gin.Context) {
 	var item models.Specialty
 
@@ -62,7 +62,7 @@ func (h *SpecialtyHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, item)
 }
 
-// PUT /specials/:id
+// PUT /specialties/:id
 func (h *SpecialtyHandler) Update(c *gin.Context) {
 	var item models.Specialty
 	idStr := c.Param("id")
@@ -88,7 +88,7 @@ func (h *SpecialtyHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
-// DELETE /specials/:id
+// DELETE /specialties/:id
 func (h *SpecialtyHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)

@@ -2,12 +2,10 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type EventGrade struct {
-	gorm.Model
+	ID        uint `gorm:"primaryKey;autoIncrement"`
 	GradedBy  uint
 	Teacher   Teacher `gorm:"foreignKey:GradedBy"`
 	EventID   uint

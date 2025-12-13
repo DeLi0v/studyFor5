@@ -2,12 +2,10 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type Grade struct {
-	gorm.Model
+	ID        uint   `gorm:"primaryKey;autoIncrement"`
 	Type      string `gorm:"type:grade_type;not null"`
 	StudentID uint
 	Student   Student `gorm:"foreignKey:StudentID"`
