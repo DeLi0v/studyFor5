@@ -16,13 +16,13 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 
 func (r *EventRepository) GetAll() ([]models.Event, error) {
 	var events []models.Event
-	result := r.db.Preload("Room").Preload("Participants").Preload("EventGrades").Find(&events)
+	result := r.db.Preload("Room").Preload("Participants").Find(&events)
 	return events, result.Error
 }
 
 func (r *EventRepository) GetByID(id uint) (*models.Event, error) {
 	var event models.Event
-	result := r.db.Preload("Room").Preload("Participants").Preload("EventGrades").First(&event, id)
+	result := r.db.Preload("Room").Preload("Participants").First(&event, id)
 	return &event, result.Error
 }
 

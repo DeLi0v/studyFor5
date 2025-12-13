@@ -3,6 +3,7 @@ package router
 import (
 	handlers "backend/controllers"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +25,7 @@ func SetupRouter(
 	subjectHandler *handlers.SubjectHandler,
 ) *gin.Engine {
 	r := gin.Default()
+	r.Use(cors.Default())
 
 	// Группы маршрутов по сущностям
 	api := r.Group("/api")

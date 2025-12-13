@@ -17,14 +17,14 @@ func NewSpecialtyRepository(db *gorm.DB) *SpecialtyRepository {
 // Получить всех участников события
 func (r *SpecialtyRepository) GetAll() ([]models.Specialty, error) {
 	var specialties []models.Specialty
-	result := r.db.Preload("Teachers").Find(&specialties)
+	result := r.db.Find(&specialties)
 	return specialties, result.Error
 }
 
 // Получить участника события по ID
 func (r *SpecialtyRepository) GetByID(id uint) (*models.Specialty, error) {
 	var specialty models.Specialty
-	result := r.db.Preload("Teachers").First(&specialty, id)
+	result := r.db.First(&specialty, id)
 	return &specialty, result.Error
 }
 

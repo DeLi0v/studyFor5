@@ -17,14 +17,14 @@ func NewTeacherRepository(db *gorm.DB) *TeacherRepository {
 // Получить всех участников события
 func (r *TeacherRepository) GetAll() ([]models.Teacher, error) {
 	var teachers []models.Teacher
-	err := r.db.Preload("Position").Preload("Specialty").Preload("Groups").Preload("EventGrades").Preload("Lessons").Preload("Grades").Find(&teachers).Error
+	err := r.db.Preload("Position").Preload("Specialty").Preload("Groups").Find(&teachers).Error
 	return teachers, err
 }
 
 // Получить участника события по ID
 func (r *TeacherRepository) GetByID(id uint) (*models.Teacher, error) {
 	var teacher models.Teacher
-	err := r.db.Preload("Position").Preload("Specialty").Preload("Groups").Preload("EventGrades").Preload("Lessons").Preload("Grades").First(&teacher, id).Error
+	err := r.db.Preload("Position").Preload("Specialty").Preload("Groups").First(&teacher, id).Error
 	return &teacher, err
 }
 

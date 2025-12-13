@@ -17,14 +17,14 @@ func NewPositionRepository(db *gorm.DB) *PositionRepository {
 // Получить всех участников события
 func (r *PositionRepository) GetAll() ([]models.Position, error) {
 	var positions []models.Position
-	result := r.db.Preload("Teachers").Find(&positions)
+	result := r.db.Find(&positions)
 	return positions, result.Error
 }
 
 // Получить участника события по ID
 func (r *PositionRepository) GetByID(id uint) (*models.Position, error) {
 	var position models.Position
-	result := r.db.Preload("Teachers").First(&position, id)
+	result := r.db.First(&position, id)
 	return &position, result.Error
 }
 

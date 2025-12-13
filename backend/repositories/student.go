@@ -17,14 +17,14 @@ func NewStudentRepository(db *gorm.DB) *StudentRepository {
 // Получить всех участников события
 func (r *StudentRepository) GetAll() ([]models.Student, error) {
 	var students []models.Student
-	result := r.db.Preload("Grades").Preload("EventGrades").Preload("Parents").Find(&students)
+	result := r.db.Preload("Group").Preload("Parents").Find(&students)
 	return students, result.Error
 }
 
 // Получить участника события по ID
 func (r *StudentRepository) GetByID(id uint) (*models.Student, error) {
 	var student models.Student
-	result := r.db.First(&student, id)
+	result := r.db.Preload("Group").Preload("Parents").First(&student, id)
 	return &student, result.Error
 }
 
