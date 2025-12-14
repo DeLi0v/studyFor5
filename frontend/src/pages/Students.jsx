@@ -10,9 +10,9 @@ export default function Students() {
         { field: "FirstName", label: "Имя" },
         { field: "LastName", label: "Фамилия" },
         { field: "MiddleName", label: "Отчество" },
-        { field: "Phone", label: "Телефон" },
+        { field: "Phone", label: "Телефон", displayMask: "+7 (###) ###-##-##",},
         { field: "Email", label: "Email" },
-        { field: "GroupID", label: "Класс", type: "select", options: "groups" },
+        { field: "GroupID", label: "Класс", type: "select", options: "groups", displayTemplate: "{Number}",},
       ]}
       relations={{
         groups: {

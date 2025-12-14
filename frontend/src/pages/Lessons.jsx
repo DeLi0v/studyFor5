@@ -12,24 +12,28 @@ export default function Lessons() {
           label: "Класс",
           options: "groups",
           type: "select",
+          displayTemplate: "{Number}",
         },
         {
           field: "SubjectID",
           label: "Предмет",
           options: "subjects",
           type: "select",
+          displayTemplate: "{Name}"
         },
         {
           field: "TeacherID",
           label: "Учитель",
           options: "teachers",
           type: "select",
+          displayTemplate: "{LastName} {FirstName} {MiddleName}",
         },
         {
           field: "RoomID",
           label: "Кабинет",
           options: "rooms",
           type: "select",
+          displayTemplate: "{Number}",
         },
         {
           field: "Weekday",

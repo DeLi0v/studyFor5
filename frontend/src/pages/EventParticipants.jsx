@@ -118,7 +118,10 @@ export default function EventParticipants() {
           renderInForm: (value, onChange) => (
             <Select
               value={value || ""}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={(e) =>
+  onChange(e.target.value ? Number(e.target.value) : null)
+}
+
             >
               <option value="">Выберите мероприятие</option>
               {events.map((event) => (
@@ -176,7 +179,10 @@ export default function EventParticipants() {
             return (
               <Select
                 value={value || ""}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={(e) =>
+                  onChange(e.target.value ? Number(e.target.value) : null)
+                }
+
                 isDisabled={!formValues?.participant_type}
               >
                 <option value="">Выберите участника</option>

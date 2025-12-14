@@ -9,15 +9,15 @@ export default function Groups() {
       columns={[
         { field: "Number", label: "Номер" },
         { field: "Parallel", label: "Параллель" },
-        { field: "AdmissionDate", label: "Дата поступления" },
-        { field: "ClassTeacherID", label: "Классный руководитель" },
-      ]}
-      relations={{
-        teachers: {
+        { field: "AdmissionDate", label: "Дата поступления", type: "date"},
+        {
           field: "ClassTeacherID",
-          displayField: "FirstName",
+          label: "Классный руководитель",
+          options: "teachers",
+          type: "select",
+          displayTemplate: "{LastName} {FirstName} {MiddleName}",
         },
-      }}
+      ]}
     />
   );
 }

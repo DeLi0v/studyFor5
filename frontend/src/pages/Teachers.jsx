@@ -14,6 +14,7 @@ export default function Teachers() {
           field: "Phone",
           label: "Телефон",
           type: "phone",
+          displayMask: "+7 (###) ###-##-##",
         },
         { field: "Email", label: "Email", type: "email" },
         {

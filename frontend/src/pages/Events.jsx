@@ -15,6 +15,7 @@ export default function Events() {
           label: "Кабинет",
           options: "rooms",
           type: "select",
+          displayTemplate: "{Number}"
         },
         { field: "EventDate", label: "Дата проведения", type: "date" },
         {

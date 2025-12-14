@@ -32,7 +32,7 @@ export default function EntityPage({
   entityName,
   columns = [],
   relations = {},
-  onFormChange = () => {},
+  onFormChange = () => { },
 }) {
   const [data, setData] = useState([]);
   const [relatedData, setRelatedData] = useState({});
@@ -230,7 +230,7 @@ export default function EntityPage({
       // Собираем только измененные поля
       columns.forEach(({ field, parse, type }) => {
         const originalValue = current ? current[field] : undefined;
-        const newValue = form[field] ?? null;
+        let newValue = form[field] ?? null;
 
         // Если это редактирование и значение не изменилось - не включаем в payload
         if (current && originalValue === newValue) {
@@ -242,20 +242,43 @@ export default function EntityPage({
 
         if (parse && processedValue !== null) {
           processedValue = parse(processedValue);
+        } else if (type === "select") {
+          // Для select полей всегда конвертируем в число или null
+          if (processedValue === "" || processedValue === null) {
+            processedValue = null;
+          } else {
+            processedValue = Number(processedValue);
+          }
         } else if (
           type === "number" &&
           processedValue !== null &&
           processedValue !== ""
         ) {
           processedValue = Number(processedValue);
-        } else if (type === "select" && processedValue === "") {
-          processedValue = null;
+        } else if (type === "date" && processedValue) {
+          // Для дат преобразуем в формат ISO (с временем)
+          // "2025-12-31" -> "2025-12-31T00:00:00Z"
+          if (processedValue.includes("T")) {
+            // Уже в ISO формате
+            processedValue = processedValue;
+          } else {
+            // Добавляем время для Go time.Time
+            processedValue = `${processedValue}T00:00:00Z`;
+          }
         }
 
-        payload[field] = processedValue;
+        // Добавляем в payload только если значение не undefined
+        if (processedValue !== undefined) {
+          payload[field] = processedValue;
+        }
       });
 
       console.log("Отправляемые данные:", payload);
+      console.log("Типы данных в payload:", Object.keys(payload).map(key => ({
+        field: key,
+        value: payload[key],
+        type: typeof payload[key]
+      })));
 
       // Очищаем предыдущие ошибки
       setFieldErrors({});
@@ -329,8 +352,11 @@ export default function EntityPage({
     columns.forEach(({ field, format, type, options }) => {
       let value = item[field] ?? "";
 
-      // НЕ применяем format для select полей, иначе ID превратится в строку
-      if (format && !(type === "select" && typeof options === "string")) {
+      if (type === "date" && value) {
+        if (typeof value === "string" && value.includes("T")) {
+          value = value.substring(0, 10); // "2025-03-10"
+        }
+      } else if (format && !(type === "select" && typeof options === "string")) {
         value = format(value);
       }
 
@@ -371,12 +397,25 @@ export default function EntityPage({
   };
 
   const renderCell = (item, column) => {
-    const { field, render, format, type, displayTemplate } = column;
+    const { field, render, format, type, displayTemplate, options } = column;
+
+    if (
+      item[field] === null ||
+      item[field] === undefined ||
+      item[field] === ""
+    ) {
+      return "-";
+    }
 
     // 1. Кастомный рендер
     if (render) return render(item, relatedData);
 
     let value = item[field];
+
+    if (column.displayMask && value) {
+      const digits = String(value).replace(/\D/g, "");
+      return applyMask(digits, column.displayMask) ?? "-";
+    }
 
     // 2. Для связанных сущностей
     if (
@@ -390,7 +429,22 @@ export default function EntityPage({
 
       if (!relatedItem) return "-";
 
-      // 2a. Используем format функцию если есть
+      // 2a. Используем шаблон если есть
+      if (displayTemplate) {
+        let result = displayTemplate;
+        // Заменяем все {fieldName} на значения
+        Object.keys(relatedItem).forEach((key) => {
+          const val = relatedItem[key] || "";
+          // Регулярное выражение для поиска {key} в шаблоне
+          const regex = new RegExp(`\\{${key}\\}`, "g");
+          result = result.replace(regex, val);
+        });
+        // Очищаем оставшиеся {field} если таких полей нет в данных
+        result = result.replace(/\{[^}]+\}/g, "");
+        return result.trim() || "-";
+      }
+
+      // 2b. Используем format функцию если есть (для обратной совместимости)
       if (format) {
         if (format.length === 3) {
           return format(value, item, relatedData) ?? "-";
@@ -399,27 +453,23 @@ export default function EntityPage({
         }
       }
 
-      // 2b. Используем шаблон если есть
-      if (displayTemplate) {
-        let result = displayTemplate;
-        Object.keys(relatedItem).forEach((key) => {
-          const val = relatedItem[key] || "";
-          result = result.replace(new RegExp(`\\{${key}\\}`, "g"), val);
-        });
-        return result;
-      }
-
       // 2c. Стандартное отображение
       const displayField = column.displayField || "Name";
       return relatedItem[displayField] || "-";
     }
 
-    // 3. Форматирование обычных полей
+    // 3. Для select с опциями из массива (как Weekday)
+    if (type === "select" && Array.isArray(options)) {
+      const selectedOption = options.find(opt => opt.value === value);
+      return selectedOption ? selectedOption.label : value ?? "-";
+    }
+
+    // 4. Форматирование обычных полей
     if (format) {
       return format(value) ?? "-";
     }
 
-    // 4. Форматирование по типу
+    // 5. Форматирование по типу
     if (type === "time" && value) {
       const timeStr = String(value);
       if (timeStr.includes("T")) {
@@ -432,7 +482,7 @@ export default function EntityPage({
       } else if (timeStr.match(/^\d{2}:\d{2}/)) {
         return timeStr;
       } else if (timeStr.match(/^\d{1,2}:\d{2}:\d{2}/)) {
-        return timeStr.substring(0, 5);
+        return timeStr.substring(0, 5) ?? "-";
       }
     }
 
@@ -442,7 +492,7 @@ export default function EntityPage({
         const date = new Date(dateStr);
         return date.toLocaleDateString("ru-RU");
       }
-      return value;
+      return value ?? "-";
     }
 
     return value ?? "-";
@@ -457,6 +507,7 @@ export default function EntityPage({
       mask,
       options,
       displayField,
+      displayTemplate,
     } = column;
 
     const fieldError = getFieldError(field);
@@ -514,7 +565,7 @@ export default function EntityPage({
       );
     }
 
-    // Select с опциями из массива
+    // Select с опциями из массива (как Weekday)
     if (type === "select" && Array.isArray(options)) {
       return (
         <FormControl mb={3} key={field} isInvalid={!!fieldError}>
@@ -542,7 +593,7 @@ export default function EntityPage({
       );
     }
 
-    // Select с опциями из связанной сущности
+    // Select с опциями из связанной сущности (как TeacherID, GroupID и т.д.)
     if (type === "select" && typeof options === "string") {
       const entityName = options;
       const relatedItems = relatedData[entityName] || [];
@@ -558,11 +609,29 @@ export default function EntityPage({
             borderColor={borderColor}
           >
             <option value="">Выберите</option>
-            {relatedItems.map((item) => (
-              <option key={item.ID} value={item.ID}>
-                {item[displayFieldName]}
-              </option>
-            ))}
+            {relatedItems.map((item) => {
+              // Определяем текст для отображения в опции
+              let displayText = item[displayFieldName] || `ID: ${item.ID}`;
+
+              // Если есть displayTemplate, используем его
+              if (displayTemplate) {
+                let result = displayTemplate;
+                Object.keys(item).forEach((key) => {
+                  const val = item[key] || "";
+                  const regex = new RegExp(`\\{${key}\\}`, "g");
+                  result = result.replace(regex, val);
+                });
+                // Очищаем оставшиеся {field}
+                result = result.replace(/\{[^}]+\}/g, "");
+                displayText = result.trim() || item[displayFieldName] || `ID: ${item.ID}`;
+              }
+
+              return (
+                <option key={item.ID} value={item.ID}>
+                  {displayText}
+                </option>
+              );
+            })}
           </Select>
           {fieldError && (
             <Alert status="error" mt={1} fontSize="sm" p={2}>
