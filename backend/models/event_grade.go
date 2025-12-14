@@ -1,9 +1,5 @@
 package models
 
-import (
-	"time"
-)
-
 type EventGrade struct {
 	ID        uint `gorm:"primaryKey;autoIncrement"`
 	GradedBy  *uint
@@ -12,6 +8,6 @@ type EventGrade struct {
 	Event     Event `gorm:"foreignKey:EventID"`
 	StudentID *uint
 	Student   Student    `gorm:"foreignKey:StudentID"`
-	DateGiven *time.Time `gorm:"type:date"`
+	DateGiven *string `gorm:"type:time"`
 	Score     *uint
 }
