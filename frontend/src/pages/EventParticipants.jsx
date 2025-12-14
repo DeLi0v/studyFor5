@@ -73,9 +73,8 @@ export default function EventParticipants() {
       case "teacher":
       case "student":
       case "parent":
-        return `${participant.LastName || ""} ${participant.FirstName || ""} ${
-          participant.MiddleName || ""
-        }`.trim();
+        return `${participant.LastName || ""} ${participant.FirstName || ""} ${participant.MiddleName || ""
+          }`.trim();
       case "group":
         return (
           participant.Name || participant.Number || `Группа ${participant.ID}`
@@ -112,6 +111,8 @@ export default function EventParticipants() {
         {
           field: "event_id",
           label: "Мероприятие",
+          type: "select",
+          required: true,
           // Рендер в таблице
           render: (item) => getEventName(item.event_id),
           // Рендер в форме
@@ -119,8 +120,8 @@ export default function EventParticipants() {
             <Select
               value={value || ""}
               onChange={(e) =>
-  onChange(e.target.value ? Number(e.target.value) : null)
-}
+                onChange(e.target.value ? Number(e.target.value) : null)
+              }
 
             >
               <option value="">Выберите мероприятие</option>
@@ -135,6 +136,7 @@ export default function EventParticipants() {
         {
           field: "participant_type",
           label: "Тип участника",
+          required: true,
           // Рендер в таблице
           render: (item) => {
             const type = PARTICIPANT_TYPES.find(
@@ -160,6 +162,8 @@ export default function EventParticipants() {
         {
           field: "participant_id",
           label: "Участник",
+          type: "select",
+          required: true,
           // Рендер в таблице
           render: (item) => {
             const participants = getParticipantsByType(item.participant_type);

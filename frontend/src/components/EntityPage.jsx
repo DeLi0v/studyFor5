@@ -224,22 +224,38 @@ export default function EntityPage({
   };
 
   const handleSubmit = async () => {
+    const missingFields = columns
+      .filter(c => c.required)
+      .filter(c => form[c.field] === null || form[c.field] === "" || form[c.field] === undefined);
+
+    const isCreate = !current;
+
+    if (missingFields.length) {
+      const errors = {};
+      missingFields.forEach(f => {
+        errors[f.field] = "Поле обязательно для заполнения";
+      });
+
+      setFieldErrors(errors);
+      setInvalidFields(missingFields.map(f => f.field));
+      setFormError("Заполните обязательные поля");
+      return; // ❌ СТОП
+    }
+
     try {
       const payload = {};
 
       // Собираем только измененные поля
       columns.forEach(({ field, parse, type }) => {
         const originalValue = current ? current[field] : undefined;
-        let newValue = form[field] ?? null;
 
-        // Если это редактирование и значение не изменилось - не включаем в payload
-        if (current && originalValue === newValue) {
-          return; // пропускаем это поле
-        }
+        // нормализуем значение из формы
+        let processedValue =
+          form[field] === "" || form[field] === undefined
+            ? null
+            : form[field];
 
-        // Обработка значения
-        let processedValue = newValue;
-
+        // parse (если есть)
         if (parse && processedValue !== null) {
           processedValue = parse(processedValue);
         } else if (type === "select") {
@@ -267,10 +283,10 @@ export default function EntityPage({
           }
         }
 
-        // Добавляем в payload только если значение не undefined
-        if (processedValue !== undefined) {
+        if ((!isCreate && processedValue !== undefined) || (isCreate)) {
           payload[field] = processedValue;
         }
+
       });
 
       console.log("Отправляемые данные:", payload);
