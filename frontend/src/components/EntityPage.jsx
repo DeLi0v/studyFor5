@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Heading,
@@ -43,9 +43,138 @@ export default function EntityPage({
   const [current, setCurrent] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [form, setForm] = useState({});
+  const [sortConfig, setSortConfig] = useState({ field: null, direction: 'asc' });
 
-  // Новое состояние для хранения информации о конкретных ошибках полей
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // Функция для безопасного преобразования значения в строку
+  const safeString = (value) => {
+    if (value === null || value === undefined) return "";
+    return String(value);
+  };
+
+  // ИСПРАВЛЕННАЯ: Функция для извлечения цифр из телефона
+  const extractPhoneDigits = (value, returnNumber = false) => {
+    if (!value) return returnNumber ? null : "";
+    const str = safeString(value);
+    // Убираем все нецифры
+    const digits = str.replace(/\D/g, "");
+
+    // Если ничего не осталось, возвращаем пустую строку или null
+    if (!digits) return returnNumber ? null : "";
+
+    // Если номер начинается с 8, меняем на 7
+    let processedDigits = digits;
+    if (digits.startsWith('8')) {
+      processedDigits = '7' + digits.substring(1);
+    }
+
+    // Возвращаем либо строку, либо число
+    return returnNumber ? Number(processedDigits) : processedDigits;
+  };
+
+  // Улучшенная функция для нормализации значения (из формы в БД)
+  const normalizeValue = (value, column) => {
+    const { type, parse } = column;
+
+    // Если значение пустое - возвращаем null
+    if (value === "" || value === null || value === undefined) {
+      return null;
+    }
+
+    // Если есть parse функция, используем ее
+    if (parse) {
+      try {
+        return parse(value);
+      } catch (err) {
+        console.error(`Ошибка в parse функции для поля ${column.field}:`, err);
+        return value;
+      }
+    }
+
+    // Автоматическая нормализация по типу
+    switch (type) {
+      case "select":
+        // Для select проверяем, является ли options массивом
+        if (Array.isArray(column.options)) {
+          // Проверяем тип значений в options
+          if (column.options.length > 0) {
+            const firstOption = column.options[0];
+            // Если значения в options - числа, преобразуем в число
+            if (typeof firstOption.value === 'number') {
+              const num = Number(value);
+              return isNaN(num) ? null : num;
+            }
+            // Если значения - строки, оставляем как строку
+            return value;
+          }
+          return value;
+        }
+        // Для select с связанными сущностями (по ID) преобразуем в число
+        const num = Number(value);
+        return isNaN(num) ? null : num;
+
+      case "number":
+        const numVal = Number(value);
+        return isNaN(numVal) ? null : numVal;
+
+      case "phone":
+        // Для телефона извлекаем только цифры как число
+        return extractPhoneDigits(value, true);
+
+      case "date":
+        // Для дат преобразуем в формат ISO
+        const dateStr = safeString(value);
+        if (dateStr && !dateStr.includes("T")) {
+          return `${dateStr}T00:00:00Z`;
+        }
+        return dateStr;
+
+      default:
+        return value;
+    }
+  };
+
+  // Улучшенная функция для денормализации значения (из БД в форму)
+  const denormalizeValue = (value, column) => {
+    if (value === null || value === undefined) {
+      return "";
+    }
+
+    const { type, format } = column;
+
+    // Если есть format функция, используем ее
+    if (format) {
+      try {
+        return format(value);
+      } catch (err) {
+        console.error(`Ошибка в format функции для поля ${column.field}:`, err);
+        return value;
+      }
+    }
+
+    const strValue = safeString(value);
+
+    switch (type) {
+      case "date":
+        // Из ISO формата в "YYYY-MM-DD" для input
+        if (strValue.includes("T")) {
+          return strValue.substring(0, 10);
+        }
+        return strValue;
+
+      case "time":
+        // Из "HH:MM:SS" в "HH:MM" для input
+        return strValue.length > 5 ? strValue.substring(0, 5) : strValue;
+
+      case "phone":
+        // Для телефона возвращаем как есть (цифры)
+        return strValue;
+
+      default:
+        return strValue;
+    }
+  };
 
   // Собираем все связанные сущности из columns
   const extractRelationsFromColumns = () => {
@@ -88,33 +217,51 @@ export default function EntityPage({
       .finally(() => setLoading(false));
   }, [entityName, JSON.stringify(relations || {}), JSON.stringify(columns)]);
 
+  // Сортировка данных
+  const sortedData = useMemo(() => {
+    if (!sortConfig.field) return data;
+
+    return [...data].sort((a, b) => {
+      const aValue = a[sortConfig.field];
+      const bValue = b[sortConfig.field];
+
+      if (aValue === bValue) return 0;
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+
+      const comparison = aValue < bValue ? -1 : 1;
+      return sortConfig.direction === 'asc' ? comparison : -comparison;
+    });
+  }, [data, sortConfig]);
+
+  const handleSort = (field) => {
+    setSortConfig(current => {
+      if (current.field === field) {
+        return {
+          field,
+          direction: current.direction === 'asc' ? 'desc' : 'asc'
+        };
+      }
+      return {
+        field,
+        direction: 'asc'
+      };
+    });
+  };
+
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-
-    let processedValue = value;
-
-    // Находим конфигурацию столбца
+    const { name, value } = e.target;
     const column = columns.find((col) => col.field === name);
 
-    if (column) {
-      // Для select полей конвертируем в число (ID) или null
-      if (column.type === "select") {
-        processedValue = value === "" ? null : Number(value);
-      }
-      // Применяем парсинг если есть
-      else if (column.parse) {
-        processedValue = column.parse(value);
-      }
-      // Для чисел конвертируем в число
-      else if (type === "number" || column.type === "number") {
-        processedValue = value === "" ? null : Number(value);
-      }
+    // Для select полей с кастомным renderInForm может приходить пустая строка
+    let processedValue = value;
+    if (column?.type === "select" && value === "") {
+      processedValue = null;
     }
 
     setForm((prev) => {
-      const newForm = { ...prev, [name]: value };
-      // Вызываем callback при изменении формы
-      onFormChange(name, value, newForm, setForm);
+      const newForm = { ...prev, [name]: processedValue };
+      onFormChange(name, processedValue, newForm, setForm);
       return newForm;
     });
 
@@ -131,7 +278,6 @@ export default function EntityPage({
   const handleCustomChange = (field, value) => {
     setForm((prev) => {
       const newForm = { ...prev, [field]: value };
-      // Вызываем callback при изменении формы
       onFormChange(field, value, newForm, setForm);
       return newForm;
     });
@@ -150,50 +296,11 @@ export default function EntityPage({
   const parseBackendErrors = (errorData) => {
     const errors = {};
 
-    // Если ошибка в формате: { "field": "error message" }
     if (errorData && typeof errorData === "object") {
       Object.entries(errorData).forEach(([key, value]) => {
-        // Проверяем разные форматы ошибок
-        if (
-          key.toLowerCase().includes("field") ||
-          key.toLowerCase().includes("error") ||
-          columns.find((col) => col.field === key)
-        ) {
-          // Ищем поле в columns
-          const column = columns.find(
-            (col) =>
-              col.field === key || col.field.toLowerCase() === key.toLowerCase()
-          );
-
-          if (column) {
-            errors[column.field] =
-              typeof value === "string" ? value : JSON.stringify(value);
-          } else {
-            // Если не нашли точное совпадение, пробуем по частичному совпадению
-            for (const col of columns) {
-              if (
-                key.toLowerCase().includes(col.field.toLowerCase()) ||
-                col.field.toLowerCase().includes(key.toLowerCase())
-              ) {
-                errors[col.field] =
-                  typeof value === "string" ? value : JSON.stringify(value);
-                break;
-              }
-            }
-          }
-        }
-      });
-    }
-
-    // Если ошибка в формате: "field: error message" или "FieldName: error"
-    else if (typeof errorData === "string") {
-      // Пытаемся найти упоминания полей в тексте ошибки
-      columns.forEach((col) => {
-        if (
-          errorData.toLowerCase().includes(col.field.toLowerCase()) ||
-          errorData.toLowerCase().includes(col.label.toLowerCase())
-        ) {
-          errors[col.field] = errorData;
+        const column = columns.find((col) => col.field === key);
+        if (column) {
+          errors[column.field] = typeof value === "string" ? value : JSON.stringify(value);
         }
       });
     }
@@ -201,112 +308,141 @@ export default function EntityPage({
     return errors;
   };
 
-  const applyMask = (value, mask) => {
-    if (!value) return "";
+  // ИСПРАВЛЕННАЯ: Улучшенная функция для маски телефона
+  const applyPhoneMask = (value, mask = "+7 (###) ###-##-##") => {
+    const digits = extractPhoneDigits(value, false); // Получаем строку с цифрами
+    if (!digits) return "";
 
     let result = "";
-    let valueIndex = 0;
+    let digitIndex = 0;
+    const digitsStr = String(digits);
 
-    for (let i = 0; i < mask.length && valueIndex < value.length; i++) {
+    // Удаляем первую цифру если она 7 (она уже в маске)
+    let digitsToUse = digitsStr;
+    if (digitsStr.startsWith('7')) {
+      digitsToUse = digitsStr.substring(1);
+    }
+
+    for (let i = 0; i < mask.length && digitIndex < digitsToUse.length; i++) {
       if (mask[i] === "#") {
-        if (/[0-9]/.test(value[valueIndex])) {
-          result += value[valueIndex];
-          valueIndex++;
-        } else {
-          break;
-        }
+        result += digitsToUse[digitIndex];
+        digitIndex++;
       } else {
         result += mask[i];
       }
     }
 
     return result;
+
   };
 
+  // ИСПРАВЛЕННАЯ функция handleSubmit
   const handleSubmit = async () => {
-    const missingFields = columns
-      .filter(c => c.required)
-      .filter(c => form[c.field] === null || form[c.field] === "" || form[c.field] === undefined);
+    console.log("Текущая форма перед отправкой:", form);
 
-    const isCreate = !current;
+    // Валидация обязательных полей в форме
+    const missingFields = [];
+    columns.forEach(column => {
+      if (column.required) {
+        const value = form[column.field];
+        if (value === null || value === "" || value === undefined) {
+          missingFields.push(column.field);
+        }
+      }
+    });
 
-    if (missingFields.length) {
+    if (missingFields.length > 0) {
       const errors = {};
-      missingFields.forEach(f => {
-        errors[f.field] = "Поле обязательно для заполнения";
+      missingFields.forEach(field => {
+        const column = columns.find(c => c.field === field);
+        errors[field] = `Поле "${column?.label || field}" обязательно для заполнения`;
       });
-
       setFieldErrors(errors);
-      setInvalidFields(missingFields.map(f => f.field));
+      setInvalidFields(missingFields);
       setFormError("Заполните обязательные поля");
-      return; // ❌ СТОП
+      return;
     }
 
     try {
       const payload = {};
+      let hasChanges = false;
 
-      // Собираем только измененные поля
-      columns.forEach(({ field, parse, type }) => {
-        const originalValue = current ? current[field] : undefined;
+      // Подготовка данных для отправки
+      columns.forEach((column) => {
+        const { field } = column;
+        const formValue = form[field];
 
-        // нормализуем значение из формы
-        let processedValue =
-          form[field] === "" || form[field] === undefined
-            ? null
-            : form[field];
+        // Нормализуем значение
+        const processedValue = normalizeValue(formValue, column);
 
-        // parse (если есть)
-        if (parse && processedValue !== null) {
-          processedValue = parse(processedValue);
-        } else if (type === "select") {
-          // Для select полей всегда конвертируем в число или null
-          if (processedValue === "" || processedValue === null) {
-            processedValue = null;
-          } else {
-            processedValue = Number(processedValue);
-          }
-        } else if (
-          type === "number" &&
-          processedValue !== null &&
-          processedValue !== ""
-        ) {
-          processedValue = Number(processedValue);
-        } else if (type === "date" && processedValue) {
-          // Для дат преобразуем в формат ISO (с временем)
-          // "2025-12-31" -> "2025-12-31T00:00:00Z"
-          if (processedValue.includes("T")) {
-            // Уже в ISO формате
-            processedValue = processedValue;
-          } else {
-            // Добавляем время для Go time.Time
-            processedValue = `${processedValue}T00:00:00Z`;
-          }
-        }
-
-        if ((!isCreate && processedValue !== undefined) || (isCreate)) {
+        // ДЛЯ СОЗДАНИЯ: добавляем все поля
+        if (!current) {
           payload[field] = processedValue;
+          hasChanges = true;
+          return;
         }
 
+        // ДЛЯ РЕДАКТИРОВАНИЯ: проверяем изменения
+        const originalValue = current[field];
+        const normalizedOriginal = normalizeValue(originalValue, column);
+
+        console.log(`Поле ${field}:`, {
+          formValue,
+          processedValue,
+          originalValue,
+          normalizedOriginal,
+          changed: JSON.stringify(processedValue) !== JSON.stringify(normalizedOriginal)
+        });
+
+        // Если значение изменилось, добавляем в payload
+        if (JSON.stringify(processedValue) !== JSON.stringify(normalizedOriginal)) {
+          payload[field] = processedValue;
+          hasChanges = true;
+        }
       });
 
-      console.log("Отправляемые данные:", payload);
-      console.log("Типы данных в payload:", Object.keys(payload).map(key => ({
-        field: key,
-        value: payload[key],
-        type: typeof payload[key]
-      })));
+      // Если нет изменений (при редактировании)
+      if (current && !hasChanges) {
+        setFormError("Нет изменений для сохранения");
+        return;
+      }
 
-      // Очищаем предыдущие ошибки
+      console.log("Отправляемые данные:", payload);
+
+      // Проверка: все ли обязательные поля есть в payload для создания
+      if (!current) {
+        const requiredColumns = columns.filter(c => c.required);
+        const missingRequired = requiredColumns.filter(col => {
+          const value = payload[col.field];
+          return value === null || value === undefined || value === "";
+        });
+
+        if (missingRequired.length > 0) {
+          const errors = {};
+          missingRequired.forEach(col => {
+            errors[col.field] = "Поле обязательно для заполнения";
+          });
+          setFieldErrors(errors);
+          setFormError("Не все обязательные поля заполнены");
+          return;
+        }
+      }
+
+      // Очищаем ошибки
       setFieldErrors({});
       setFormError(null);
       setInvalidFields([]);
 
+      let result;
       if (current) {
-        await update(entityName, current.ID, payload);
+        result = await update(entityName, current.ID, payload);
       } else {
-        await create(entityName, payload);
+        result = await create(entityName, payload);
       }
 
+      console.log("Результат сохранения:", result);
+
+      // Перезагружаем данные
       const res = await getAll(entityName);
       setData(Array.isArray(res) ? res : []);
       onClose();
@@ -318,38 +454,25 @@ export default function EntityPage({
       console.error("Ответ сервера:", err.response?.data);
 
       const errorData = err.response?.data;
-      let errorMessage =
-        "Ошибка при сохранении данных. Проверьте поля и попробуйте снова.";
+      let errorMessage = "Ошибка при сохранении данных. Проверьте поля и попробуйте снова.";
 
-      // Парсим ошибки от бэкенда
       const parsedErrors = parseBackendErrors(errorData);
-
       if (Object.keys(parsedErrors).length > 0) {
-        // Устанавливаем конкретные ошибки полей
         setFieldErrors(parsedErrors);
-
-        // Подсвечиваем все проблемные поля
         setInvalidFields(Object.keys(parsedErrors));
-
-        // Формируем общее сообщение об ошибке
         const fieldNames = Object.keys(parsedErrors)
           .map((field) => {
             const column = columns.find((col) => col.field === field);
             return column ? column.label : field;
           })
           .join(", ");
-
         errorMessage = `Ошибка в полях: ${fieldNames}. Проверьте введенные данные.`;
-      } else {
-        // Если не удалось распарсить конкретные поля, показываем общую ошибку
-        if (typeof errorData === "string") {
-          errorMessage = errorData;
-        } else if (errorData?.message) {
-          errorMessage = errorData.message;
-        } else if (errorData?.error) {
-          errorMessage = errorData.error;
-        }
-        setInvalidFields(columns.map((c) => c.field));
+      } else if (typeof errorData === "string") {
+        errorMessage = errorData;
+      } else if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (errorData?.error) {
+        errorMessage = errorData.error;
       }
 
       setFormError(errorMessage);
@@ -357,7 +480,6 @@ export default function EntityPage({
   };
 
   const handleEdit = (item) => {
-    // Очищаем ошибки при открытии формы редактирования
     setFieldErrors({});
     setInvalidFields([]);
     setFormError(null);
@@ -365,20 +487,13 @@ export default function EntityPage({
     setCurrent(item);
     const initialForm = {};
 
-    columns.forEach(({ field, format, type, options }) => {
-      let value = item[field] ?? "";
-
-      if (type === "date" && value) {
-        if (typeof value === "string" && value.includes("T")) {
-          value = value.substring(0, 10); // "2025-03-10"
-        }
-      } else if (format && !(type === "select" && typeof options === "string")) {
-        value = format(value);
-      }
-
-      initialForm[field] = value;
+    columns.forEach((column) => {
+      const { field, defaultValue } = column;
+      const value = item[field] ?? (defaultValue !== undefined ? defaultValue : "");
+      initialForm[field] = denormalizeValue(value, column);
     });
 
+    console.log("Форма для редактирования:", initialForm);
     setForm(initialForm);
     onOpen();
   };
@@ -390,128 +505,110 @@ export default function EntityPage({
       setData((prev) => prev.filter((d) => d.ID !== id));
     } catch (err) {
       console.error(err);
-      setError(
-        "Ошибка при удалении записи, остальная информация отображается."
-      );
+      setError("Ошибка при удалении записи, остальная информация отображается.");
     }
   };
 
-  // Функция для проверки, есть ли ошибка у конкретного поля
   const getFieldError = (field) => {
     return fieldErrors[field];
   };
 
-  // Функция для определения цвета рамки поля
   const getBorderColor = (field) => {
     if (fieldErrors[field]) {
-      return "red.500"; // Красная рамка для полей с ошибкой
+      return "red.500";
     }
     if (invalidFields.includes(field)) {
-      return "orange.500"; // Оранжевая рамка если все поля подсвечены
+      return "orange.500";
     }
-    return undefined; // Стандартный цвет
+    return undefined;
   };
 
   const renderCell = (item, column) => {
-    const { field, render, format, type, displayTemplate, options } = column;
+    const { field, render, type, displayTemplate, options, displayMask } = column;
 
-    if (
-      item[field] === null ||
-      item[field] === undefined ||
-      item[field] === ""
-    ) {
+    // Кастомный рендер
+    if (render) return render(item, relatedData);
+
+    const value = item[field];
+    if (value === null || value === undefined || value === "") {
       return "-";
     }
 
-    // 1. Кастомный рендер
-    if (render) return render(item, relatedData);
+    // Поле с маской для отображения - ИСПРАВЛЕННЫЙ КОД
+    if (displayMask && value) {
+      if (type === "phone") {
+        const maskedValue = applyPhoneMask(value, displayMask);
+        console.log(`Phone masking: ${value} -> ${maskedValue}`);
+        return maskedValue || "-";
+      }
 
-    let value = item[field];
-
-    if (column.displayMask && value) {
-      const digits = String(value).replace(/\D/g, "");
-      return applyMask(digits, column.displayMask) ?? "-";
+      // Для других типов с маской
+      const digits = safeString(value).replace(/\D/g, "");
+      let result = "";
+      let digitIndex = 0;
+      for (let i = 0; i < displayMask.length && digitIndex < digits.length; i++) {
+        if (displayMask[i] === "#") {
+          result += digits[digitIndex];
+          digitIndex++;
+        } else {
+          result += displayMask[i];
+        }
+      }
+      return result || "-";
     }
 
-    // 2. Для связанных сущностей
-    if (
-      type === "select" &&
-      column.options &&
-      typeof column.options === "string"
-    ) {
-      const entityName = column.options;
-      const relatedItems = relatedData[entityName];
-      const relatedItem = relatedItems?.find((r) => r.ID === value);
+    // Select с опциями из связанной сущности
+    if (type === "select" && typeof options === "string") {
+      const entityName = options;
+      const relatedItems = relatedData[entityName] || [];
+      const relatedItem = relatedItems.find((r) => r.ID === value);
 
-      if (!relatedItem) return "-";
+      if (!relatedItem) return `ID: ${value}`;
 
-      // 2a. Используем шаблон если есть
       if (displayTemplate) {
         let result = displayTemplate;
-        // Заменяем все {fieldName} на значения
         Object.keys(relatedItem).forEach((key) => {
-          const val = relatedItem[key] || "";
-          // Регулярное выражение для поиска {key} в шаблоне
-          const regex = new RegExp(`\\{${key}\\}`, "g");
-          result = result.replace(regex, val);
+          const val = safeString(relatedItem[key]);
+          result = result.replace(new RegExp(`\\{${key}\\}`, "g"), val);
         });
-        // Очищаем оставшиеся {field} если таких полей нет в данных
         result = result.replace(/\{[^}]+\}/g, "");
         return result.trim() || "-";
       }
 
-      // 2b. Используем format функцию если есть (для обратной совместимости)
-      if (format) {
-        if (format.length === 3) {
-          return format(value, item, relatedData) ?? "-";
-        } else if (format.length === 1) {
-          return format(value) ?? "-";
-        }
-      }
-
-      // 2c. Стандартное отображение
       const displayField = column.displayField || "Name";
-      return relatedItem[displayField] || "-";
+      return safeString(relatedItem[displayField]) || "-";
     }
 
-    // 3. Для select с опциями из массива (как Weekday)
+    // Select с опциями из массива
     if (type === "select" && Array.isArray(options)) {
       const selectedOption = options.find(opt => opt.value === value);
-      return selectedOption ? selectedOption.label : value ?? "-";
+      return selectedOption ? selectedOption.label : safeString(value);
     }
 
-    // 4. Форматирование обычных полей
-    if (format) {
-      return format(value) ?? "-";
-    }
-
-    // 5. Форматирование по типу
+    // Форматирование по типу
     if (type === "time" && value) {
-      const timeStr = String(value);
-      if (timeStr.includes("T")) {
-        const date = new Date(timeStr);
+      const str = safeString(value);
+      if (str.includes("T")) {
+        const date = new Date(str);
         return date.toLocaleTimeString("ru-RU", {
           hour: "2-digit",
           minute: "2-digit",
           hour12: false,
         });
-      } else if (timeStr.match(/^\d{2}:\d{2}/)) {
-        return timeStr;
-      } else if (timeStr.match(/^\d{1,2}:\d{2}:\d{2}/)) {
-        return timeStr.substring(0, 5) ?? "-";
       }
+      return str.length > 5 ? str.substring(0, 5) : str;
     }
 
     if (type === "date" && value) {
-      const dateStr = String(value);
-      if (dateStr.includes("T")) {
-        const date = new Date(dateStr);
+      const str = safeString(value);
+      if (str.includes("T")) {
+        const date = new Date(str);
         return date.toLocaleDateString("ru-RU");
       }
-      return value ?? "-";
+      return str;
     }
 
-    return value ?? "-";
+    return safeString(value);
   };
 
   const renderFormField = (column) => {
@@ -524,16 +621,17 @@ export default function EntityPage({
       options,
       displayField,
       displayTemplate,
+      required = false,
     } = column;
 
     const fieldError = getFieldError(field);
     const borderColor = getBorderColor(field);
-    const value = form[field] || "";
+    const value = form[field] !== undefined ? form[field] : "";
 
-    // Если есть кастомный рендер для формы, используем его
+    // Кастомный рендер для формы
     if (renderInForm) {
       return (
-        <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+        <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
           <FormLabel>{label}</FormLabel>
           {renderInForm(
             value,
@@ -551,22 +649,33 @@ export default function EntityPage({
       );
     }
 
-    // Поле с маской (телефон)
+    // Поле с маской (телефон) - ИСПРАВЛЕННЫЙ ВАРИАНТ
     if (type === "phone" || mask) {
       const phoneMask = mask || "+7 (###) ###-##-##";
-      const displayValue = value
-        ? applyMask(String(value).replace(/\D/g, ""), phoneMask)
-        : "";
+      const displayValue = applyPhoneMask(value, phoneMask);
 
       return (
-        <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+        <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
           <FormLabel>{label}</FormLabel>
           <Input
             name={field}
             value={displayValue}
             onChange={(e) => {
-              const rawValue = e.target.value.replace(/\D/g, "");
-              handleCustomChange(field, rawValue);
+              const inputValue = e.target.value;
+              // Извлекаем цифры из введенного значения как строку
+              const digits = extractPhoneDigits(inputValue, false);
+              handleCustomChange(field, digits);
+            }}
+            onBlur={(e) => {
+              // При потере фокуса форматируем номер
+              const digits = extractPhoneDigits(value, false);
+              if (digits) {
+                const formatted = applyPhoneMask(digits, phoneMask);
+                // Обновляем display value
+                e.target.value = formatted;
+                // Также обновляем состояние
+                handleCustomChange(field, digits);
+              }
             }}
             borderColor={borderColor}
             placeholder={phoneMask}
@@ -581,14 +690,14 @@ export default function EntityPage({
       );
     }
 
-    // Select с опциями из массива (как Weekday)
+    // Select с опциями из массива
     if (type === "select" && Array.isArray(options)) {
       return (
-        <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+        <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
           <FormLabel>{label}</FormLabel>
           <Select
             name={field}
-            value={value}
+            value={value || ""}
             onChange={handleChange}
             borderColor={borderColor}
           >
@@ -609,37 +718,33 @@ export default function EntityPage({
       );
     }
 
-    // Select с опциями из связанной сущности (как TeacherID, GroupID и т.д.)
+    // Select с опциями из связанной сущности
     if (type === "select" && typeof options === "string") {
       const entityName = options;
       const relatedItems = relatedData[entityName] || [];
       const displayFieldName = displayField || "Name";
 
       return (
-        <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+        <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
           <FormLabel>{label}</FormLabel>
           <Select
             name={field}
-            value={value}
+            value={value || ""}
             onChange={handleChange}
             borderColor={borderColor}
           >
             <option value="">Выберите</option>
             {relatedItems.map((item) => {
-              // Определяем текст для отображения в опции
-              let displayText = item[displayFieldName] || `ID: ${item.ID}`;
+              let displayText = safeString(item[displayFieldName]) || `ID: ${item.ID}`;
 
-              // Если есть displayTemplate, используем его
               if (displayTemplate) {
                 let result = displayTemplate;
                 Object.keys(item).forEach((key) => {
-                  const val = item[key] || "";
-                  const regex = new RegExp(`\\{${key}\\}`, "g");
-                  result = result.replace(regex, val);
+                  const val = safeString(item[key]);
+                  result = result.replace(new RegExp(`\\{${key}\\}`, "g"), val);
                 });
-                // Очищаем оставшиеся {field}
                 result = result.replace(/\{[^}]+\}/g, "");
-                displayText = result.trim() || item[displayFieldName] || `ID: ${item.ID}`;
+                displayText = result.trim() || safeString(item[displayFieldName]) || `ID: ${item.ID}`;
               }
 
               return (
@@ -659,10 +764,10 @@ export default function EntityPage({
       );
     }
 
-    // Стандартные типы полей
+    // Стандартные поля
     const inputProps = {
       name: field,
-      value: value,
+      value: safeString(value),
       onChange: handleChange,
       borderColor: borderColor,
     };
@@ -670,9 +775,13 @@ export default function EntityPage({
     switch (type) {
       case "number":
         return (
-          <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+          <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
             <FormLabel>{label}</FormLabel>
-            <Input type="number" {...inputProps} />
+            <Input
+              type="number"
+              {...inputProps}
+              value={value === "" ? "" : value}
+            />
             {fieldError && (
               <Alert status="error" mt={1} fontSize="sm" p={2}>
                 <AlertIcon boxSize="12px" />
@@ -684,7 +793,7 @@ export default function EntityPage({
 
       case "email":
         return (
-          <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+          <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
             <FormLabel>{label}</FormLabel>
             <Input type="email" {...inputProps} />
             {fieldError && (
@@ -698,7 +807,7 @@ export default function EntityPage({
 
       case "date":
         return (
-          <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+          <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
             <FormLabel>{label}</FormLabel>
             <Input type="date" {...inputProps} />
             {fieldError && (
@@ -712,7 +821,7 @@ export default function EntityPage({
 
       case "time":
         return (
-          <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+          <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
             <FormLabel>{label}</FormLabel>
             <Input type="time" {...inputProps} step="300" />
             {fieldError && (
@@ -726,7 +835,7 @@ export default function EntityPage({
 
       default:
         return (
-          <FormControl mb={3} key={field} isInvalid={!!fieldError}>
+          <FormControl mb={3} key={field} isInvalid={!!fieldError} isRequired={required}>
             <FormLabel>{label}</FormLabel>
             <Input {...inputProps} />
             {fieldError && (
@@ -738,6 +847,12 @@ export default function EntityPage({
           </FormControl>
         );
     }
+  };
+
+  // Функция для отображения иконки сортировки
+  const renderSortIcon = (field) => {
+    if (sortConfig.field !== field) return null;
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
   };
 
   return (
@@ -763,14 +878,21 @@ export default function EntityPage({
             <Tr>
               <Th>ID</Th>
               {columns.map((c) => (
-                <Th key={c.field}>{c.label}</Th>
+                <Th
+                  key={c.field}
+                  onClick={() => handleSort(c.field)}
+                  cursor="pointer"
+                  _hover={{ bg: "gray.100" }}
+                >
+                  {c.label}{renderSortIcon(c.field)}
+                </Th>
               ))}
               <Th>Действия</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {data.length ? (
-              data.map((item) => (
+            {sortedData.length ? (
+              sortedData.map((item) => (
                 <Tr key={item.ID}>
                   <Td>{item.ID}</Td>
                   {columns.map((c) => (
@@ -814,18 +936,19 @@ export default function EntityPage({
           setForm({});
           setFormError(null);
           setInvalidFields([]);
-          setFieldErrors({}); // Очищаем ошибки при закрытии
+          setFieldErrors({});
         }}
+        size="lg"
       >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>{current ? "Редактировать" : "Добавить"}</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody pb={6}>
             {columns.map(renderFormField)}
 
             {formError && !Object.keys(fieldErrors).length && (
-              <Alert status="error" mt={2}>
+              <Alert status="error" mt={4}>
                 <AlertIcon />
                 {formError}
               </Alert>

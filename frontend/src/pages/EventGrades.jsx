@@ -7,27 +7,35 @@ export default function EventGrades() {
       entityName="eventGrades"
       columns={[
         {
-          field: "StudentID",
-          label: "Ученик",
+          field: "ParticipantID",
+          label: "Участник",
+          type: "select",
           options: "students",
+          required: true,
           displayField: "FirstName",
-          format: (value, item, relatedData) => {
-            const res = relatedData.students?.find((e) => e.ID === value);
-            if (!res) return "-";
-            return `${res.LastName} ${res.FirstName} ${res.MiddleName}`;
-          },
+          displayTemplate: "{LastName} {FirstName} {MiddleName}",
         },
-        { field: "EventID", label: "Мероприятие", options: "events" },
-        { field: "Score", label: "Оценка" },
-        { field: "DateGiven", label: "Дата" },
+        {
+          field: "EventID",
+          label: "Мероприятие",
+          type: "select",
+          options: "events",
+          required: true,
+          displayField: "Name",
+        },
+        {
+          field: "Score",
+          label: "Оценка",
+          type: "number",
+          required: true,
+        },
+        {
+          field: "DateGiven",
+          label: "Дата",
+          type: "date",
+          required: true,
+        },
       ]}
-      relations={{
-        students: {
-          field: "StudentID",
-          displayField: "FirstName",
-          displayFieldInTable: "FirstName",
-        },
-      }}
     />
   );
 }

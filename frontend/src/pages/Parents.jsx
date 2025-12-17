@@ -7,13 +7,16 @@ export default function Parents() {
       title="Родители"
       entityName="parents"
       columns={[
-        { field: "FirstName", label: "Имя" },
-        { field: "LastName", label: "Фамилия" },
+        { field: "FirstName", label: "Имя",required: true, },
+        { field: "LastName", label: "Фамилия",required: true, },
         { field: "MiddleName", label: "Отчество" },
         {
           field: "Phone",
           label: "Телефон",
           type: "phone",
+          mask: "+7 (###) ###-##-##",
+          displayMask: "+7 (###) ###-##-##",
+          required: true,
         },
         { field: "Email", label: "Email", type: "email" },
       ]}

@@ -1,11 +1,9 @@
-// EventParticipants.jsx - ПОЛНЫЙ КОД
 import EntityPage from "../components/EntityPage";
 import { useEffect, useState } from "react";
 import { getAll } from "../api/index";
 import { Select } from "@chakra-ui/react";
 
-// Константы с типами участников
-const PARTICIPANT_TYPES = [
+const ParticipantTypeS = [
   { value: "teacher", label: "Учитель" },
   { value: "student", label: "Ученик" },
   { value: "parent", label: "Родитель" },
@@ -13,7 +11,6 @@ const PARTICIPANT_TYPES = [
 ];
 
 export default function EventParticipants() {
-  // Состояние для загрузки данных
   const [events, setEvents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
@@ -21,7 +18,6 @@ export default function EventParticipants() {
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузка всех необходимых данных
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -49,7 +45,6 @@ export default function EventParticipants() {
     loadData();
   }, []);
 
-  // Функция для получения списка участников по типу
   const getParticipantsByType = (type) => {
     switch (type) {
       case "teacher":
@@ -65,43 +60,32 @@ export default function EventParticipants() {
     }
   };
 
-  // Функция для форматирования имени участника
   const formatParticipantName = (participant, type) => {
     if (!participant) return "";
-
     switch (type) {
       case "teacher":
       case "student":
       case "parent":
-        return `${participant.LastName || ""} ${participant.FirstName || ""} ${participant.MiddleName || ""
-          }`.trim();
+        return `${participant.LastName || ""} ${participant.FirstName || ""} ${participant.MiddleName || ""}`.trim();
       case "group":
-        return (
-          participant.Name || participant.Number || `Группа ${participant.ID}`
-        );
+        return participant.Name || participant.Number || `Группа ${participant.ID}`;
       default:
         return "";
     }
   };
 
-  // Функция для получения названия мероприятия
   const getEventName = (eventId) => {
     const event = events.find((e) => e.ID === parseInt(eventId));
     return event ? event.Name || event.Title || `Мероприятие ${event.ID}` : "-";
   };
 
-  // Функция-колбэк для обработки изменений в форме
   const handleFormChange = (field, value, formValues, setForm) => {
-    // Если изменился тип участника, сбрасываем выбранного участника
-    if (field === "participant_type") {
-      setForm((prev) => ({ ...prev, participant_id: "" }));
+    if (field === "ParticipantType") {
+      setForm((prev) => ({ ...prev, ParticipantID: "" }));
     }
   };
 
-  // Если данные еще загружаются, показываем спиннер
-  if (isLoading) {
-    return <div>Загрузка данных...</div>;
-  }
+  if (isLoading) return <div>Загрузка данных...</div>;
 
   return (
     <EntityPage
@@ -109,20 +93,17 @@ export default function EventParticipants() {
       entityName="event-participants"
       columns={[
         {
-          field: "event_id",
+          field: "EventID",
           label: "Мероприятие",
           type: "select",
           required: true,
-          // Рендер в таблице
-          render: (item) => getEventName(item.event_id),
-          // Рендер в форме
+          // ВАЖНО: parse должен возвращать число или null
+          parse: (value) => value === "" || value === null ? null : Number(value),
+          render: (item) => getEventName(item.EventID),
           renderInForm: (value, onChange) => (
             <Select
               value={value || ""}
-              onChange={(e) =>
-                onChange(e.target.value ? Number(e.target.value) : null)
-              }
-
+              onChange={(e) => onChange(e.target.value)}
             >
               <option value="">Выберите мероприятие</option>
               {events.map((event) => (
@@ -134,24 +115,19 @@ export default function EventParticipants() {
           ),
         },
         {
-          field: "participant_type",
+          field: "ParticipantType",
           label: "Тип участника",
+          type: "select",
           required: true,
-          // Рендер в таблице
+          parse: (value) => value === "" || value === null ? null : value,
           render: (item) => {
-            const type = PARTICIPANT_TYPES.find(
-              (t) => t.value === item.participant_type
-            );
-            return type ? type.label : item.participant_type;
+            const type = ParticipantTypeS.find((t) => t.value === item.ParticipantType);
+            return type ? type.label : item.ParticipantType;
           },
-          // Рендер в форме
           renderInForm: (value, onChange) => (
-            <Select
-              value={value || ""}
-              onChange={(e) => onChange(e.target.value)}
-            >
+            <Select value={value || ""} onChange={(e) => onChange(e.target.value)}>
               <option value="">Выберите тип</option>
-              {PARTICIPANT_TYPES.map((type) => (
+              {ParticipantTypeS.map((type) => (
                 <option key={type.value} value={type.value}>
                   {type.label}
                 </option>
@@ -160,42 +136,28 @@ export default function EventParticipants() {
           ),
         },
         {
-          field: "participant_id",
+          field: "ParticipantID",
           label: "Участник",
           type: "select",
           required: true,
-          // Рендер в таблице
+          parse: (value) => value === "" || value === null ? null : Number(value),
           render: (item) => {
-            const participants = getParticipantsByType(item.participant_type);
-            const participant = participants.find(
-              (p) => p.ID === parseInt(item.participant_id)
-            );
-            return (
-              formatParticipantName(participant, item.participant_type) || "-"
-            );
+            const participants = getParticipantsByType(item.ParticipantType);
+            const participant = participants.find((p) => p.ID === parseInt(item.ParticipantID));
+            return formatParticipantName(participant, item.ParticipantType) || "-";
           },
-          // Рендер в форме (зависит от выбранного типа)
           renderInForm: (value, onChange, formValues) => {
-            const participants = getParticipantsByType(
-              formValues?.participant_type
-            );
-
+            const participants = getParticipantsByType(formValues?.ParticipantType);
             return (
               <Select
                 value={value || ""}
-                onChange={(e) =>
-                  onChange(e.target.value ? Number(e.target.value) : null)
-                }
-
-                isDisabled={!formValues?.participant_type}
+                onChange={(e) => onChange(e.target.value)}
+                isDisabled={!formValues?.ParticipantType}
               >
                 <option value="">Выберите участника</option>
-                {participants.map((participant) => (
-                  <option key={participant.ID} value={participant.ID}>
-                    {formatParticipantName(
-                      participant,
-                      formValues?.participant_type
-                    )}
+                {participants.map((p) => (
+                  <option key={p.ID} value={p.ID}>
+                    {formatParticipantName(p, formValues?.ParticipantType)}
                   </option>
                 ))}
               </Select>
@@ -203,7 +165,6 @@ export default function EventParticipants() {
           },
         },
       ]}
-      // ПЕРЕДАЕМ КОЛБЭК ДЛЯ ОБРАБОТКИ ИЗМЕНЕНИЙ ФОРМЫ
       onFormChange={handleFormChange}
     />
   );

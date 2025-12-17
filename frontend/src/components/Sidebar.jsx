@@ -32,9 +32,9 @@ export default function Sidebar() {
         <Link as={NavLink} to="/grades">
           Оценки
         </Link>
-        <Link as={NavLink} to="/event-grades">
+        {/* <Link as={NavLink} to="/event-grades">
           Оценки за события
-        </Link>
+        </Link> */}
 
         <Link as={NavLink} to="/parents">
           Родители
@@ -56,6 +56,10 @@ export default function Sidebar() {
         <Link as={NavLink} to="/student-relations">
           Связи студенты-родители
         </Link>
+
+        {/* <Link as={NavLink} to="/test-data">
+          Тест API
+        </Link> */}
       </VStack>
     </Box>
   );

@@ -5,7 +5,7 @@ export default function Subjects() {
     <EntityPage
       title="Предметы"
       entityName="subjects"
-      columns={[{ field: "Name", label: "Имя" }]}
+      columns={[{ field: "Name", label: "Название", required: true, }]}
     />
   );
 }

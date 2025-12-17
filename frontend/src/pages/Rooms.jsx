@@ -6,8 +6,8 @@ export default function Rooms() {
       title="Кабинеты"
       entityName="rooms"
       columns={[
-        { field: "Number", label: "Номер" },
-        { field: "Floor", label: "Этаж", type: "number" },
+        { field: "Number", label: "Номер",required: true, },
+        { field: "Floor", label: "Этаж", type: "number",required: true, },
       ]}
     />
   );

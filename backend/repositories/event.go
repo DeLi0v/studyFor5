@@ -27,6 +27,8 @@ func (r *EventRepository) GetByID(id uint) (*models.Event, error) {
 }
 
 func (r *EventRepository) Create(event *models.Event) error {
+	eventType := "event"
+	event.Type = &eventType
 	return r.db.Create(event).Error
 }
 
@@ -34,9 +36,9 @@ func (r *EventRepository) Update(event *models.Event) error {
 
 	updates := map[string]interface{}{}
 
-	if event.Type != nil {
-		updates["type"] = event.Type
-	}
+	eventType := "event"
+	updates["type"] = eventType
+
 	if event.Name != nil {
 		updates["name"] = event.Name
 	}

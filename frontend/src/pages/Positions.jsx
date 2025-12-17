@@ -5,7 +5,7 @@ export default function Positions() {
     <EntityPage
       title="Должности"
       entityName="positions"
-      columns={[{ field: "Name", label: "Наименование" }]}
+      columns={[{ field: "Name", label: "Наименование",required: true, }]}
     />
   );
 }

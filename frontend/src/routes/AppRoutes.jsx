@@ -18,6 +18,7 @@ import Subjects from "../pages/Subjects";
 import StudentRelations from "../pages/StudentRelations";
 
 import { Box, Flex } from "@chakra-ui/react";
+import TestData from "../pages/TestAPI";
 
 export default function AppRoutes() {
   return (
@@ -41,6 +42,7 @@ export default function AppRoutes() {
             <Route path="/specialties" element={<Specialties />} />
             <Route path="/subjects" element={<Subjects />} />
             <Route path="/student-relations" element={<StudentRelations />} />
+            <Route path="/test-data" element={<TestData />} />
           </Routes>
         </Box>
       </Flex>

@@ -5,7 +5,7 @@ export default function Specialties() {
     <EntityPage
       title="Специальности"
       entityName="specialties"
-      columns={[{ field: "Name", label: "Имя" }]}
+      columns={[{ field: "Name", label: "Наименование", required: true, }]}
     />
   );
 }

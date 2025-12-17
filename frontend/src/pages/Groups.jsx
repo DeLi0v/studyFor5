@@ -7,9 +7,9 @@ export default function Groups() {
       title="Классы"
       entityName="groups"
       columns={[
-        { field: "Number", label: "Номер" },
-        { field: "Parallel", label: "Параллель" },
-        { field: "AdmissionDate", label: "Дата поступления", type: "date"},
+        { field: "Number", label: "Номер", required: true, },
+        { field: "Parallel", label: "Параллель", required: true, type: "number"},
+        { field: "AdmissionDate", label: "Дата поступления", type: "date", required: true, },
         {
           field: "ClassTeacherID",
           label: "Классный руководитель",

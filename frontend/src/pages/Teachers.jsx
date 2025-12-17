@@ -1,4 +1,3 @@
-// TeacherPage.jsx
 import EntityPage from "../components/EntityPage";
 
 export default function Teachers() {
@@ -7,14 +6,16 @@ export default function Teachers() {
       title="Учителя"
       entityName="teachers"
       columns={[
-        { field: "FirstName", label: "Имя" },
-        { field: "LastName", label: "Фамилия" },
+        { field: "FirstName", label: "Имя", required: true },
+        { field: "LastName", label: "Фамилия", required: true },
         { field: "MiddleName", label: "Отчество" },
         {
           field: "Phone",
           label: "Телефон",
           type: "phone",
+          mask: "+7 (###) ###-##-##",
           displayMask: "+7 (###) ###-##-##",
+          required: true,
         },
         { field: "Email", label: "Email", type: "email" },
         {
@@ -22,21 +23,19 @@ export default function Teachers() {
           label: "Должность",
           options: "positions",
           type: "select",
+          required: true,
         },
         {
           field: "SpecialtyID",
           label: "Специальность",
           options: "specialties",
           type: "select",
+          required: true,
         },
       ]}
       relations={{
-        positions: {
-          field: "PositionID",
-        },
-        specialties: {
-          field: "SpecialtyID",
-        },
+        positions: { field: "PositionID" },
+        specialties: { field: "SpecialtyID" },
       }}
     />
   );
